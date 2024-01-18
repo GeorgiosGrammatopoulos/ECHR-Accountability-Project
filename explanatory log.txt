@@ -1,0 +1,17 @@
+Version B12012024:
+
+First step into building a regression analysis model, on a simulated dataset, to ensure agreement with the expectations of legal theory
+
+Initial aggregations of the simulation indicate similar patterns to those promised in legal theory: a normal distribution of voting patterns, with a significant, but not crucial preference for the state. The way the model is constructed, this preference may be attributed to the potential bias of the national judge towards their state of nationality.
+
+Logistic regression outcomes are in line with those suggestions: they confirm the desired outcomes, by suggesting a slight advantage for the state due to the national judge, and no correlation with belonging on sensitive groups. Linear regression analysis on the amounts of compensation fails to demonstrate any statistically significant impact of the national judge on the amount of compensation, despite the effect of their presumed preference on the voting patterns.
+
+Additional research indicates two other potentially crucial factors: the presumption of tangibility of the facts, which is established by the case making it through the stage of admissibility, and the impact of the status as government official when dealing with such cases.
+
+The new version will follow the same structure, only with an adjusted reasoning for the judges and with the use of the status of an individual as an official as a coefficient for the purposes of linear and logistic regression.
+
+References:
+
+
+
+------------------------------------------------------------------------------------------------------------------------------
