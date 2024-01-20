@@ -1,17 +1,22 @@
-Version B12012024:
+---------------------------------------------------------------------------------------------------------------------------
+Version B20240118:
 
-First step into building a regression analysis model, on a simulated dataset, to ensure agreement with the expectations of legal theory
-
-Initial aggregations of the simulation indicate similar patterns to those promised in legal theory: a normal distribution of voting patterns, with a significant, but not crucial preference for the state. The way the model is constructed, this preference may be attributed to the potential bias of the national judge towards their state of nationality.
+Initial aggregations of the simulated dataset indicate similar patterns to those promised in legal theory: a normal distribution of voting patterns, with a significant, but not crucial preference for the state. The way the model is constructed, this preference may be attributed to the potential bias of the national judge towards their state of nationality.
 
 Logistic regression outcomes are in line with those suggestions: they confirm the desired outcomes, by suggesting a slight advantage for the state due to the national judge, and no correlation with belonging on sensitive groups. Linear regression analysis on the amounts of compensation fails to demonstrate any statistically significant impact of the national judge on the amount of compensation, despite the effect of their presumed preference on the voting patterns.
 
-Additional research indicates two other potentially crucial factors: the presumption of tangibility of the facts, which is established by the case making it through the stage of admissibility, and the impact of the status as government official when dealing with such cases.
+However, these initial suggestions are way too simplistic to indicate the factors influencing the optimal reasoning of the judge.
 
-The new version will follow the same structure, only with an adjusted reasoning for the judges and with the use of the status of an individual as an official as a coefficient for the purposes of linear and logistic regression.
+Additional research indicates two other potentially crucial factors:
+1. The fact that the case has been ruled as admissible leads to our sample only being populated with cases demonstrating an element of urgency, with their facts already established
+2. The doctrine of the margin of appreciation suggests that the ECtHR will favor to an extent the interpretation of the law provided by the state
 
-References:
+The new version will follow the same structure, only with an adjusted reasoning for the judges (to account for the margin of appreciation). Also, it will proceed with a presumption of the facts being relatively established in favor of the applicant- which affects the likelihood of the court accepting those facts, especially where there is no contest with the government record.
 
 
 
-------------------------------------------------------------------------------------------------------------------------------
+Additional references:
+
+Brems, E., & Lavrysen, L. (2013). Procedural Justice in Human Rights Adjudication: The European Court of Human Rights. Human Rights Quarterly, 35(1), 176–200. doi:10.1353/hrq.2013.0000
+
+Van de Heyning, C. J. (2012). The Natural “Home” of Fundamental Rights Adjudication: Constitutional Challenges to the European Court of Human Rights. Yearbook of European Law, 31(1), 128–161. doi:10.1093/yel/yes004
