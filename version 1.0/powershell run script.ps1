@@ -1,0 +1,3 @@
+$filename = Get-Date -Format "yyyyMMddHHmmss"
+
+& C:/Users/GrammatopoulosGeorgi/AppData/Local/Microsoft/WindowsApps/python3.11.exe "C:\Users\GrammatopoulosGeorgi\OneDrive - Calco\Bureaublad\pet projects\three questions project\Three-Questions-Project\Three-Questions-Project\data.py" | Format-Table -AutoSize | Out-File -Width 999999 -FilePath "C:\Users\GrammatopoulosGeorgi\OneDrive - Calco\Bureaublad\pet projects\three questions project\Three-Questions-Project\Three-Questions-Project\test logs\B$filename.txt"
