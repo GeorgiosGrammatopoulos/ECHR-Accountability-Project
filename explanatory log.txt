@@ -1,3 +1,17 @@
+Version B2024030306 , 11 to 15 March 2024
+
+The latest focus has been arrangements of employment and seeking support for the proposal process. I guess actual work got deprioritized.
+
+Between the 11th and the 14th, I restructured the database, in order to make it more versatile and integrateable with data input. I am making the GUI part my last priority. Also, I have started reading up on quantitative methods as well. On Friday 15th, I am to arrange data export in pandas dataframes, so that I am able to work with it. That will conclude the integration kanban item, so that I may move on to the simulations and case import. Then comes the restructuring of the tests.
+
+
+Having completed the import and export functionalities, I am now moving on to supplementing  the judicial opinion simulation. This will require completing the subcaucus design, and creating a balancing function. I am not that concerned about the simulated cases; I have already completed an effective randomized simulation in the prototype version, which can help me generate sufficient data to build the prototype regression tests.
+
+Today my time becomes rather limited: 
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
 Version B2024030306 , 8 to 10 March 2024
 
 Yesterday was Saturday, today is Sunday- but I guess science can't wait.

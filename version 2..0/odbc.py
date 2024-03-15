@@ -1,6 +1,13 @@
 ###This is an input-output functionality. It is supposed to connect in and out of an existing database. modify as appropriate.
 
 import pyodbc
+import pandas as pd
+import csv
+import os
+
+
+
+
 
 states = [
     'Austria', 
@@ -52,17 +59,20 @@ states = [
     'Ukraine'
 ]
 
+
+
+
+
+
+
 # instantiate database: a database which is synced with a running pandas dataframe
 
 def connectData():
     
-    conn = pyodbc.connect(
-        'DRIVER={ODBC Driver 18 for SQL Server};
-        'SERVER=test;
-        'DATABASE=test;
-        'UID=user;
-        'PWD=password')
-    
+    server = 'LAPTOP-7NBR16RS\SQLEXPRESS01' 
+    database = 'echr'
+    conn = pyodbc.connect('DRIVER={SQL Server};SERVER=' + server + ';DATABASE=' + database + ';Trusted_Connection=yes;')
+
     return conn
     
     # look up https://learn.microsoft.com/en-us/sql/connect/odbc/dsn-connection-string-attribute?view=sql-server-ver16 for connection keywords
@@ -70,88 +80,342 @@ def connectData():
 # database creation function. only to be run once, if a database does not already exist.
 # attention! the database will not run if another instance is online!
 
+
+
+
+
+
+
+
 def createDatabase():
+    
+    check = 0
+    
+    try:
+    
+        conn = connectData()
+        cursor = conn.cursor()
+        inserts = ", ".join([f"('{i}')" for i in states])
+        
+        check += 1
+        
+    except pyodbc.Error as e:
+        
+        print(f'Fatal error: {e}\nPlease contact systems administration-0')
+        
+    try:
+        
+        cursor.execute('IF OBJECT_ID(\'Applicants\', \'U\') IS NOT NULL DROP TABLE Applicants')
+        
+        cursor.execute('IF OBJECT_ID(\'Reasonings\', \'U\') IS NOT NULL DROP TABLE Reasonings')
+        
+        cursor.execute('IF OBJECT_ID(\'Cases\', \'U\') IS NOT NULL DROP TABLE Cases')
+        
+        cursor.execute('IF OBJECT_ID(\'Judges\', \'U\') IS NOT NULL DROP TABLE Judges')
+        
+        cursor.execute('IF OBJECT_ID(\'Sections\', \'U\') IS NOT NULL DROP TABLE Sections')
+        
+        cursor.execute('IF OBJECT_ID(\'Countries\', \'U\') IS NOT NULL DROP TABLE Countries')
+        
+        check += 1
+        
+    except pyodbc.Error as e:
+        
+        print(f'Fatal error: {e}\nPlease contact systems administration-1')
+        
+    try:
+
+        cursor.execute('USE echr')
+        
+        check += 1
+        
+    except pyodbc.Error as e:
+        
+        print(f'Fatal error: {e}\nPlease contact systems administration-2')
+        
+    
+    try:
+        
+        cursor.execute('CREATE TABLE Countries (countryname VARCHAR(30) PRIMARY KEY)')
+        
+        check += 1
+        
+    except pyodbc.Error as e:
+        
+        print(f'Fatal error: {e}\nPlease contact systems administration-3')
+        
+    try:
+        
+        cursor.execute(f"INSERT INTO Countries (countryname) VALUES {inserts}")
+        
+        check += 1
+        
+    except pyodbc.Error as e:
+        
+        print(f'Fatal error: {e}\nPlease contact systems administration-4')
+        
+
+    try:
+        
+        cursor.execute('CREATE TABLE Judges ('
+            'firstname VARCHAR(30),'
+            'lastname VARCHAR(30),'
+            'role VARCHAR(3),'
+            'countryname VARCHAR(30) FOREIGN KEY REFERENCES Countries(countryname),'
+            'startterm DATE,'
+            'endterm DATE,'
+            'secname VARCHAR(3),'
+            'PRIMARY KEY (firstname, lastname, role))'
+            )
+            
+        check += 1
+            
+    except pyodbc.Error as e:
+        
+        print(f'Fatal error: {e}\nPlease contact systems administration-5')
+        
+        
+    try:
+        
+        cursor.execute('CREATE TABLE Cases ('
+            'application_no VARCHAR(30) PRIMARY KEY,'
+            'name VARCHAR(30),'
+            'application_date DATE,'
+            'countryname VARCHAR(30) FOREIGN KEY REFERENCES Countries(Countryname),'
+            'judgement_date DATE,'
+            'reference VARCHAR(100),'
+            'footnote VARCHAR(100),'
+            'link VARCHAR(100),'
+            'section VARCHAR(3))'
+            )
+            
+        check += 1
+            
+    except pyodbc.Error as e:
+        
+        print(f'Fatal error: {e}\nPlease contact systems administration-6')
+        
+                
+    try:
+        
+        cursor.execute('CREATE TABLE Reasonings ('
+            'application_no VARCHAR(30) FOREIGN KEY REFERENCES Cases(application_no),'
+            'firstname VARCHAR(30),'
+            'lastname VARCHAR(30),'
+            'contest_law BIT,'
+            'contest_lawres BIT,'
+            'contest_fact BIT,'
+            'contest_factres BIT,'
+            'statute VARCHAR(3),'
+            'favor INT,'
+            'against INT,'
+            'dissent_nj BIT,'
+            'material_ask INT,'
+            'non_material_ask INT,'
+            'ce_ask INT,'
+            'material_award INT,'
+            'non_material_award INT,'
+            'ce_award INT,'
+            'material_diff INT,'
+            'non_material_diff INT,'
+            'ce_diff INT,'
+            'PRIMARY KEY (application_no, firstname, lastname, statute))'
+            )
+            
+        check += 1
+
+    except pyodbc.Error as e:
+        
+        print(f'Fatal error: {e}\nPlease contact systems administration-7')
+        
+    try:
+                
+        cursor.execute('CREATE TABLE Applicants('
+            'firstname VARCHAR(30),'
+            'lastname VARCHAR(30),'
+            'application_no VARCHAR(30) FOREIGN KEY REFERENCES Cases(application_no),'
+            'nationality VARCHAR(30),'
+            'female BIT,'   #dummy indicator of female applicants
+            'natural BIT,' #dummy indicator of natural persons (to exclude corporate entities etc)
+            'southeast_asian_nationality BIT,'  #dummy of nationals of south-east Asian countries
+            'asian_nationality BIT,'#dummy of nationals of Asian countries; grouping serves the function of commonplace biases
+            'african_nationality BIT,' #dummy of nationals of African countries
+            'undocumented BIT,' #dummy of nationals of undocumented migrants
+            'religion_lack BIT,'#dummy of nationals who do not belong in an organized religion
+            'religion_muslim BIT,' #dummy of Muslim individuals; they are a particularly sensitive group in Europe
+            'religion_other BIT,' #dummy of nationals who do not belong in one of the predominant Christian denominations
+            'sexuality_other BIT,' #dummy of non-straight individuals
+            'gender_other BIT,'   #dummy of individuals who do not identify with the gender assigned to them at birth
+            'radical_political BIT,'   #dummy of individuals who expressed views which are considered politically radical in their states of residence 
+            'radical_social BIT,'   #dummy of individuals who expressed views which are considered socially radical in their states of residence
+            'criminal BIT,'   #dummy of individuals who have committed a criminal offence
+            'felon BIT,'  #dummy of individuals who have committed a serious offence according to their countries of origin
+            'official BIT,' #dummy of individuals who held public office at the time of the violation
+            'relevance BIT,'  #dummy indicating whether the identity of the applicant is related anyhow to their complaint'
+            'PRIMARY KEY (firstname, lastname, nationality))'
+            )
+            
+        check += 1
+            
+    except pyodbc.Error as e:
+        
+        print(f'Fatal error: {e}\nPlease contact systems administration-8')
+        
+        
+    try:
+        
+        conn.commit()
+        
+        check += 1
+        
+    except pyodbc.Error as e:
+        
+        print(f'Fatal error: {e}\nPlease contact systems administration-9')
+        
+    if check == 10:
+        
+        print("Database creation successful! Bear in mind, your data is no more...")
+        
+        return True
+        
+        
+        
+        
+        
+        
+        
+        
+def importData(table, column):
+    
+    value = input(f'Please assign a value to {column}: ')
+    check = 0
+    
+    try:
+    
+        conn = connectData()
+        cursor = conn.cursor()
+        inserts = ", ".join([f"('{i}')" for i in states])
+        
+        check += 1
+        
+    except pyodbc.Error as e:
+        
+        print(f'Fatal error: {e}\nPlease contact systems administration-0')
+        
+        
+    try:
+        
+        cursor.execute(f'USE echr')
+        
+        cursor.execute(f'INSERT INTO {table} ({column}) VALUES ({value})')
+        
+        conn.commit()
+        
+        check += 1
+        
+    except pyodbc.Error as e:
+        
+        print(f'Fatal error: {e}\nPlease contact systems administration-10')
+        
+    if check == 2:
+        
+        print("Data import successful!")
+        
+        return True
+        
+        
+        
+        
+        
+
+def exportData(*args, connstring = None):
+    
+    global df
+    df = pd.DataFrame()
+    
     
     
     try:
     
         conn = connectData()
         cursor = conn.cursor()
-
-        cursor.execute('CREATE DATABASE data')
-
-        cursor.execute('USE data')
         
-        cursor.execute('CREATE TABLE Countries (name VARCHAR(30) PRIMARY KEY)')
         
-        cursor.execute(f'INSERT INTO Countries (name) VALUES {', '.join([f'({i})' for i in states])}')
-
-        cursor.execute('CREATE TABLE Sections (name VARCHAR(3) PRIMARY KEY)')
-        
-        cursor.execute('CREATE TABLE Judges
-            'firstname VARCHAR(30),
-            'lastname VARCHAR(30),
-            'role VARCHAR(3)
-            'country VARCHAR(30) FOREIGN KEY REFERENCES Countries(name),
-            'startterm DATE,
-            'endterm DATE,
-            'section VARCHAR(3) FOREIGN KEY REFERENCES Sections(name),
-            'PRIMARY KEY firstname, lastname, role)
-            )
-                
-        cursor.execute('CREATE TABLE Applicants
-            'firstname VARCHAR(30),
-            'lastname VARCHAR(30),
-            'nationality VARCHAR(30) FOREIGN KEY REFERENCES Countries(name),
-            'PRIMARY KEY firstname, lastname, nationality)
-            )
-        
-        cursor.execute('CREATE TABLE Cases (
-            'application_no VARCHAR(30) PRIMARY KEY,
-            'name VARCHAR(30)
-            'application_date DATE,   
-            'respondent VARCHAR(30) FOREIGN KEY REFERENCES Countries(name),
-            'judgement_date DATE,
-            'reference VARCHAR(100),
-            'footnote VARCHAR(100),
-            'link VARCHAR(100),
-            'section VARCHAR(3) FOREIGN KEY REFERENCES Sections(name)
-            )
-        
-        cursor.execute('CREATE TABLE Reasonings (
-            'application_no VARCHAR(30) FOREIGN KEY REFERENCES Cases(application_no),
-            'firstname VARCHAR(30),
-            'lastname VARCHAR(30),
-            'contest_law BIT,
-            'contest_lawres BIT,
-            'contest_fact BIT,
-            'contest_factres BIT
-            'statute VARCHAR(3),
-            'for INT,
-            'against INT,
-            'dissent_nj BIT,
-            'material_ask INT,
-            'non_material_ask INT,
-            'ce_ask INT,
-            'material_award INT,
-            'non_material_award INT,
-            'ce_award INT,
-            'material_diff INT,
-            'non-material_diff INT,
-            'ce_diff INT,
-            'PRIMARY KEY application_no, firstname, lastname, statute'
-            )
-
-
     except pyodbc.Error as e:
         
-        print(f'Fatal error: {e}\nPlease contact systems administration')
+        print(f'Fatal error: {e}\nPlease contact systems administration-0')
+        
+    
+    for i in args:
         
         
-def importData():
+        try:
         
-        # after the creation of database code
+           cursor.execute(f'SELECT * FROM {i} {connstring}')
+            
+            
+        except pyodbc.Error as e:
+            
+            print(f'Fatal error: {e}\nPlease contact systems administration-11.{i}')
+            
+            
+        try:
+        
+            with open('output.csv', 'w', newline='') as csvfile:
+                csvwriter = csv.writer(csvfile)
+                headers = [i[0] for i in cursor.description]  # column headers
+                csvwriter.writerow(headers)
+                for row in cursor:
+                    csvwriter.writerow(row)
 
+                
+        except pyodbc.Error as e:
+            
+            print(f'Fatal error: {e}\nPlease contact systems administration-12.{i}')
+            
+        
+        try:
+        
+            if df.empty:
+                
+                df = pd.read_csv('output.csv')
+                
+            else:
+                
+                df2 = pd.read_csv('output.csv')
+                
+                dfcol = df.columns.tolist()
+                df2col = df2.columns.tolist()
+                print(dfcol)
+                print(df2col)
+                common = None
+                
+                for i in dfcol:
+                    
+                    if i in df2col:
+                        
+                        common = i
+                        break
+                    
+                df[common] = df[common].astype(str)
+                df2[common] = df2[common].astype(str)
+
+                df = pd.merge (df, df2, on = common, how='outer')
+                    
+            os.remove('output.csv')
+                
+        except pyodbc.Error as e:
+            
+            print(f'Fatal error: {e}\nPlease contact systems administration-13.{i}')
+            
+            
+    return df
+        
+    
+        
+        
+        
+    
 
 #This dataframe classifies a range of sensitive groups
 applicant_col = [
@@ -222,3 +486,31 @@ dummy_columns = [
     'radical_social', 'criminal', 'felon', 'official', 'relevance', 
     'contest_law', 'contest_fact', 'law_reasoning', 'fact_reasoning', 'win'
 ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+############################# TESTS ###################################
+
+
+createDatabase()
+importData('Cases', 'application_no')
+df = exportData('Countries', 'Judges', 'Cases', 'Reasonings', 'Applicants')
+print(df.head(49))
