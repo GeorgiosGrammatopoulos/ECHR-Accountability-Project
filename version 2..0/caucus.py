@@ -1,124 +1,27 @@
 import judge as js
 import random as rd
 import pandas as pd
+import judge
+import odbc
+import utility
 
 class Caucus:
-        
-    def __init__(self, casepolicy, casestate, law, fact, caucus = 7):
-            
-        members = []
-        composition = []
-        myjudge = None
-        forvote = 0
-        againstvote = 0
-        outcome = None
-        
-        
-        
-            
-        while True:
-            
-            current = len(members)
-            
-            myjudge = js.Judge()
-            
-            if (len(members) == caucus - 1) and (casestate not in composition) and (myjudge.state != casestate):
-                continue
-            
-            if myjudge.state in composition:
-                continue
-            else:
-                members.append(myjudge)
-                composition.append(myjudge.state)
-            
-            
-            result = myjudge.topdown(casepolicy, casestate)
-            result = myjudge.bottomup (law, fact, result)
-            
-            if result <= 0:
-                
-                againstvote += 1
-                
-            if result > 0:
-                
-                forvote += 1
-                
-            if len(members) == caucus:
-                break
-            
-            
-            
-            
-                
-        if forvote > againstvote:
-            
-            outcome = True
-            
-        if forvote < againstvote:
-            
-            outcome = False
-            
-        
-                
-                
-        self.members = members
-        self.caucus = caucus
-        self.forvote = forvote
-        self.againstvote = againstvote
-        self.outcome = outcome
-        
-
-    def tally(self, members, caucus, forvote, against, vote):
-        
-        
-        
-class Subcaucus(self, ):
     
-    def __init__: 
-        
-        
-        
-        
-
-
-
-
-#############################  TESTS  ##################################
-
-def onetest (casepolicy, casestate, law, fact):
-
-
-    mycaucus = Caucus(casepolicy, casestate, law, fact)
-
-
-    print("Caucus members:")
-
-    for i in mycaucus.members:
-        print(i.firstname, i.lastname)
-        if mycaucus.members.index(i) == 6:
-            print("\n\n\n")
             
-    print("Caucus nationalities:")
-
-    for i in mycaucus.members:
-        print(i.state)
-        if mycaucus.members.index(i) == 6:
-            print("\n\n\n")
-
-    print(f'Membership: {mycaucus.caucus}')
-    print(f'Votes  for: {mycaucus.forvote}')
-    print(f'Votes against: {mycaucus.againstvote}')
-    print(f'Outcome: {mycaucus.outcome}')
-    
-    return mycaucus.outcome
-
-
-def multitest(casestate = None):
-    
-    casepolicy = []
-    casespecifics = []
-    assess= [-1, 0,1]
-    casestates = [
+    def __init__(
+        self, 
+        application_no = None, 
+        application_date = None, 
+        casepolicy = None, 
+        countryname = None, 
+        law = None, 
+        fact = None, 
+        caucus = 7, 
+        judgement_date = None,
+        section = None
+        ):
+            
+        states = [
             'Austria', 
             'Belgium', 
             'Cyprus', 
@@ -165,48 +68,154 @@ def multitest(casestate = None):
             'San Marino', 
             'Serbia', 
             'Turkey', 
-            'Ukraine'
-    ]
-    
-    if casestate == None:
-        
-        casestate = rd.choice(casestates)
-    
-    for i in range(0, 10, 1):
+            'Ukraine']
             
-        number = rd.randint(0,5)
-        if number != 0:
-            casepolicy.append(number)   #hard-coded stop
-
+        if application_no == None:
+            application_no = rd.randint(0,999999)
+        
+        if application_date == None:
+            application_date = input('Please fill in the application date:')
             
-    for i in range(0, len(casepolicy), 1):
+        if casepolicy == None:
+            casepolicy = input('Please fill in the case policy weight:')
             
-        casespecifics.append(rd.randint(-10, 10))   #hard-coded stop
-        
-    law = rd.choice(assess)
-    fact = rd.choice(assess)
-        
-    
-    return onetest (casepolicy, casestate, law, fact)
-    
-    
-def execute():
-    
-    pos = 0
-    neg = 0
-
-        
-    for i in range (0, 10000, 1):
-        
-        intuition = multitest()
-        if intuition > 0:
-            pos += 1
-        elif intuition <= 0:
-            neg += 1
+        if countryname == None:
+            countryname = rd.choice(states)
             
-        print("\n\n\n\n\n")
+        if law == None:
+            law = input('Please fill in the weight for the legal assessment')
+            
+        if fact == None:
+            fact = input('Please fill in the weight for the factual assessment')
+            
+        if judgement_date == None:
+            judgement_date = input('Please fill in the judgement date')
+            
+        if section == None:
+            section = input('Please fill in the section number')
+            
+        members = []
+        composition = []
+        favor = 0
+        against = 0
+        
+            
+        while True:
+            
+            current = len(members)
+            
+            myjudge = js.Judge('2024-03-14', '2024-03-14')
+            
+            if (len(members) == caucus - 1) and (countryname not in composition) and (myjudge.countryname != countryname):
+                continue
+            
+            if myjudge.countryname in composition:
+                continue
+            else:
+                members.append(myjudge)
+                composition.append(myjudge.countryname)
+            
+            
+            result = myjudge.topdown(casepolicy, countryname)
+            result = myjudge.bottomup (law, fact, result)
+            
+            if result <= 0:
                 
+                against += 1
+                
+            if result > 0:
+                
+                favor += 1
+                
+            if len(members) == caucus:
+                importData('Reasonings', 'favor', favor)
+                importData('Reasonings', 'against', against)
+                break
             
-    print (f'In 10000 iterations:\npercentage of positives: {pos/100}\npercentage of negatives: {neg/100}')
+            
+            
+            
+                
+        if favor > against:
+            
+            outcome = True
+            
+        if favor < against:
+            
+            outcome = False
+            
+        
+                
+        self.application_no = application_no
+        self.application_date = application_date
+        self.caucus = caucus
+        self.favor = forvote
+        self.against = againstvote
+        self.casepolicy = casepolicy
+        self.countryname = countryname
+        self.law = law
+        self.fact = fact
+        self.judgement_date = judgement_date
+        self.section = section
+        
+               
+
+    def importCaucus(self):
+                
+        conn = odbc.connectData()
+        
+        odbc.importData(
+            'Cases', 
+            application_no = self.application_no,
+            application_date = self.application_date,
+            judgement_date = self.judgement_date,
+            section = self.section)
+            
+        odbc.importData(
+            'Reasonings',
+            application_no = self.application_no,
+            favor = self.favor,
+            against = self.against)
+            
+            
+        return odbc.exportData('Countries', 'Judges', 'Cases', 'Reasonings')
+        
+        
+        
+#class Subcaucus(self, ):
     
-execute()
+    #def __init__: 
+        
+        
+        
+        
+
+
+
+
+#############################  TESTS  ##################################
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+
+casepolit = rd.randint(-10, 10)
+
+
+for i in range(1000):
+    
+    legal = rd.randint(-10, 10)
+    factual = rd.randint(-10, 10)
+    section = rd.randint (1, 10)
+
+    example = Caucus(
+        application_date = '2024-03-18', 
+        casepolicy = casepolit, 
+        law = legal, 
+        fact = factual, 
+        judgement_date = '2024-03-18',
+        section = '10'
+        )
+            
+    example.importCaucus()
+    
+odbc.exportData('Countries', 'Judges', 'Cases', 'Reasonings')
+

@@ -158,14 +158,14 @@ def createDatabase():
     try:
         
         cursor.execute('CREATE TABLE Judges ('
-            'firstname VARCHAR(30),'
-            'lastname VARCHAR(30),'
-            'role VARCHAR(3),'
-            'countryname VARCHAR(30) FOREIGN KEY REFERENCES Countries(countryname),'
-            'startterm DATE,'
-            'endterm DATE,'
-            'secname VARCHAR(3),'
-            'PRIMARY KEY (firstname, lastname, role))'
+            'firstname VARCHAR(30),'  #assigned randomly until not
+            'lastname VARCHAR(30),'   #assigned randomly until not
+            'role VARCHAR(30),'   #promotion record, Judge in instantiation
+            'countryname VARCHAR(30) FOREIGN KEY REFERENCES Countries(countryname),'  #assign at instantiation
+            'startterm DATE,' #assign at instantiation
+            'endterm DATE,' #assign at instantiation, make a corrector
+            'secname VARCHAR(3),' #assign at assignment, starts as null
+            'PRIMARY KEY (firstname, lastname, role))' 
             )
             
         check += 1
@@ -182,7 +182,7 @@ def createDatabase():
             'name VARCHAR(30),'
             'application_date DATE,'
             'countryname VARCHAR(30) FOREIGN KEY REFERENCES Countries(Countryname),'
-            'judgement_date DATE,'
+            'judgement_date VARCHAR(3),'
             'reference VARCHAR(100),'
             'footnote VARCHAR(100),'
             'link VARCHAR(100),'
@@ -285,44 +285,35 @@ def createDatabase():
         
         
         
-def importData(table, column):
+def importData(table, **imports):
     
-    value = input(f'Please assign a value to {column}: ')
-    check = 0
     
     try:
     
         conn = connectData()
         cursor = conn.cursor()
-        inserts = ", ".join([f"('{i}')" for i in states])
-        
-        check += 1
         
     except pyodbc.Error as e:
         
         print(f'Fatal error: {e}\nPlease contact systems administration-0')
         
-        
+    columns = ', '.join(imports.keys())  # Correct way to format column names
+    placeholders = ', '.join(['?' for _ in imports])  # Correct way to format placeholders
+    
+    # Prepare SQL statement
+    sql = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+    
     try:
-        
-        cursor.execute(f'USE echr')
-        
-        cursor.execute(f'INSERT INTO {table} ({column}) VALUES ({value})')
-        
+        cursor.execute(sql, tuple(imports.values()))
         conn.commit()
         
-        check += 1
+        return True
         
     except pyodbc.Error as e:
         
         print(f'Fatal error: {e}\nPlease contact systems administration-10')
         
-    if check == 2:
-        
-        print("Data import successful!")
-        
-        return True
-        
+        return False      
         
         
         
@@ -511,6 +502,6 @@ dummy_columns = [
 
 
 createDatabase()
-importData('Cases', 'application_no')
+importData('Cases', application_no = '1313432')
 df = exportData('Countries', 'Judges', 'Cases', 'Reasonings', 'Applicants')
 print(df.head(49))

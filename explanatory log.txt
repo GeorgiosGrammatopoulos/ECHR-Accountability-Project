@@ -1,3 +1,13 @@
+Version B2024030306 , 16 March 2024
+
+
+The log was right: I finished up with exports of judicial opinion into the relevant tables, and the formation of dataframes.
+
+I am coming to observe a serious lack in information on how the judges decide. I have already incorporated in the code the randomness in the judges who eventually participate (especially accounting for ad hoc judges and the ballot for case-by-case membership). I am not, however, unaware of the inconsistencies. they will be factored in the final product- but, for now, progress on the basic processes is paramount.
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+
 Version B2024030306 , 11 to 15 March 2024
 
 The latest focus has been arrangements of employment and seeking support for the proposal process. I guess actual work got deprioritized.
@@ -7,8 +17,7 @@ Between the 11th and the 14th, I restructured the database, in order to make it 
 
 Having completed the import and export functionalities, I am now moving on to supplementing  the judicial opinion simulation. This will require completing the subcaucus design, and creating a balancing function. I am not that concerned about the simulated cases; I have already completed an effective randomized simulation in the prototype version, which can help me generate sufficient data to build the prototype regression tests.
 
-Today my time becomes rather limited: 
-
+I ended up concluding the database integration. Tomorrow I am working on adjusting the judicial reasoning into the whole structure, and codifying it into a dataframe. Cleaning operations may become necessary as well.
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 

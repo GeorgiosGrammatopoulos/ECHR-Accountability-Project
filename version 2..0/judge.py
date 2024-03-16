@@ -1,7 +1,9 @@
 ###Necessary package imports
 import random as rd
-import utility as ut
 import numpy as np
+import pandas as pd
+import odbc
+import utility as ut
 
 
 ###Ckass representing the operations of an ordinary judge
@@ -13,7 +15,7 @@ class Judge:
 ###have their policy preferences
 ###For this version, we presume all judges are proficient and protected
 
-    def __init__ (self):
+    def __init__ (self, startterm = None, endterm = None, countrynames = None, firstnames = None, lastnames = None, role = None):
         
         policy = []
         specifics = []
@@ -78,13 +80,46 @@ class Judge:
             
             specifics.append(rd.randint(-7, 7))   #hard-coded stop
             
-        state = rd.choice(states)
-        
-        self.firstname = ut.random_name(8)
-        self.lastname = ut.random_name(8)
+        if countrynames == None:
+            countrynames = rd.choice(states)
+        self.countryname = countrynames
+        if firstnames == None:
+            firstnames = ut.random_name(8)
+        self.firstname = firstnames
+        if lastnames == None:
+            lastnames = ut.random_name(8)
+        self.lastname = lastnames
+        if role == None:
+            role = 'Judge'
+        self.role = role
         self.policy = policy
         self.specifics = specifics
-        self.state = state
+        self.startterm = ut.dateInput('Please enter the judge\s start date: ', startterm)
+        self.endterm = ut.dateInput('Please enter the judge\s end date: ', endterm)
+        
+        
+    def judgeAppointment (self):
+        
+        fulls = odbc.exportData('Judges')
+        
+        if not ((fulls['lastname'] == self.lastname) & (fulls['firstname'] == self.firstname)).any():
+            
+            nfirstname = str(self.firstname)
+            nlastname = str(self.lastname)
+            nrole = str(self.role)
+            nstartterm = str(self.startterm)
+            nendterm = str(self.endterm)
+            ncountryname = str(self.countryname)
+                    
+            odbc.importData('Judges', firstname = f'{nfirstname}', lastname = f'{nlastname}', role = f'{nrole}', startterm = f'{nstartterm}', endterm = f'{nendterm}', countryname = f'{ncountryname}')
+        
+        else:
+            
+            fulls.query(f"lastname == '{self.lastname}' and firstname == '{self.firstname}'")
+        
+        
+        
+        
             
 
 ###When judges decide, they first make an assessment
@@ -97,16 +132,16 @@ class Judge:
         denom = 0
         priority = 1
         
-        if self.state == casestate:
+        if self.countryname == casestate:
             
             denom += -15
             priority -=1
         
         for i in self.policy:
             
-            for k in range (0, len(casepolicy), 1):
+            for k in range (0, casepolicy, 1):
                 
-                if i == casepolicy[k]:
+                if i == casepolicy:
                     
                     try:
                     
@@ -122,25 +157,25 @@ class Judge:
         return denom 
         
         
-    def bottomup (self, law, fact, intuition):
+    def bottomup (self, law, fact, ruling):
         
         if law == 0:
             pass
         elif law == 1:
-            intuition +=17
+            ruling +=17
         elif law == -1:
-            intuition -=17
+            ruling -=17
             
             
         if fact == 0:
             pass
         elif fact == 1:
-            intuition +=10
+            ruling +=10
         elif fact == -1:
-            intuition -=10
+            ruling -=10
             
             
-        return intuition
+        return ruling
             
         
         
@@ -153,123 +188,17 @@ class Judge:
 
 #############################  TESTS  ##################################
         
-        
-def onetest(myjudge, casepolicy, casestate, law, fact):     ###testing function
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
 
-    intuition = myjudge.topdown(casepolicy, casestate)
-    
-    intuition = myjudge.bottomup(law, fact, intuition)
+for i in range(1000):
 
-    #print (myjudge.firstname, myjudge.lastname)
-    #print (f'Home state: {myjudge.state}')
-    #print ("Inclinations:")
+    example = Judge(startterm = '2014-03-17', endterm = '2019-03-17')
+    example.judgeAppointment()
+    
+df = odbc.exportData('Judges', 'Countries')
+print(df.head(150))
 
-    #for i in range (0, len(myjudge.policy), 1):
-        #print (f'{myjudge.policy[i]}: {myjudge.specifics[i]}', end = ", ")
-        
-    #print(f'\n\n\nCase policy considerations: {casepolicy}')
-    #print(f'Respondent state: {casestate}')
-    #print(f'\n\n\nAssessment: {intuition}')
     
-    return intuition
-    
-    
-def multitest(myjudge, casestate = None):
-    
-    assess = [-1, 0, 1]
-    casepolicy = []
-    casespecifics = []
-    casestates = [
-            'Austria', 
-            'Belgium', 
-            'Cyprus', 
-            'Czech Republic', 
-            'Denmark', 
-            'Estonia', 
-            'Finland', 
-            'France', 
-            'Germany', 
-            'Greece', 
-            'Hungary', 
-            'Iceland', 
-            'Ireland', 
-            'Italy', 
-            'Latvia', 
-            'Lithuania', 
-            'Luxembourg', 
-            'Malta', 
-            'Netherlands', 
-            'Norway', 
-            'Poland', 
-            'Portugal', 
-            'Slovakia', 
-            'Slovenia', 
-            'Spain', 
-            'Sweden', 
-            'Switzerland', 
-            'United Kingdom', 
-            'Albania', 
-            'Andorra', 
-            'Armenia', 
-            'Azerbaijan', 
-            'Bosnia and Herzegovina', 
-            'Bulgaria', 
-            'Croatia', 
-            'Georgia', 
-            'Liechtenstein', 
-            'Moldova', 
-            'Monaco', 
-            'Montenegro', 
-            'North Macedonia', 
-            'Romania', 
-            'Russia', 
-            'San Marino', 
-            'Serbia', 
-            'Turkey', 
-            'Ukraine'
-    ]
-    
-    if casestate == None:
-        
-        casestate = rd.choice(casestates)
-    
-    for i in range(0, 10, 1):
-            
-        number = rd.randint(0,5)
-        if number != 0:
-            casepolicy.append(number)   #hard-coded stop
-
-            
-    for i in range(0, len(casepolicy), 1):
-            
-        casespecifics.append(rd.randint(-10, 10))   #hard-coded stop
-        
-    law = rd.choice(assess)
-    
-    fact = rd.choice(assess)
-        
-    
-    return onetest (myjudge, casepolicy, casestate, law, fact)
-    
-    
-def execute():
-    
-    pos = 0
-    neg = 0
-    posstat = 0
-    negstat = 0
 
 
-
-        
-    for i in range (0, 10000, 1):
-        
-        myjudge = Judge()
-        intuition = multitest(myjudge)
-        if intuition > 0:
-            pos += 1
-        elif intuition <= 0:
-            neg += 1
-                
-            
-    print (f'In 10000 iterations:\npercentage of positives: {pos/100}\npercentage of negatives: {neg/100}')
