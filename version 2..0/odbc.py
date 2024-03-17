@@ -164,7 +164,7 @@ def createDatabase():
             'countryname VARCHAR(30) FOREIGN KEY REFERENCES Countries(countryname),'  #assign at instantiation
             'startterm DATE,' #assign at instantiation
             'endterm DATE,' #assign at instantiation, make a corrector
-            'secname VARCHAR(3),' #assign at assignment, starts as null
+            'section VARCHAR(30),' #assign at assignment, starts as null
             'PRIMARY KEY (firstname, lastname, role))' 
             )
             
@@ -182,11 +182,12 @@ def createDatabase():
             'name VARCHAR(30),'
             'application_date DATE,'
             'countryname VARCHAR(30) FOREIGN KEY REFERENCES Countries(Countryname),'
-            'judgement_date VARCHAR(3),'
+            'judgement_date VARCHAR(30),'
             'reference VARCHAR(100),'
             'footnote VARCHAR(100),'
             'link VARCHAR(100),'
-            'section VARCHAR(3))'
+            'section VARCHAR(30),
+            'judges VARCHAR(300))'
             )
             
         check += 1
@@ -476,32 +477,4 @@ dummy_columns = [
     'religion_other', 'sexuality_other', 'gender_other', 'radical_political', 
     'radical_social', 'criminal', 'felon', 'official', 'relevance', 
     'contest_law', 'contest_fact', 'law_reasoning', 'fact_reasoning', 'win'
-]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-############################# TESTS ###################################
-
-
-createDatabase()
-importData('Cases', application_no = '1313432')
-df = exportData('Countries', 'Judges', 'Cases', 'Reasonings', 'Applicants')
-print(df.head(49))
+]sssss

@@ -1,16 +1,104 @@
-# Function for randomizing names
-def random_name(length=6):
-    return ''.join(random.choice(string.ascii_letters) for _ in range(length))
+import random as rd
+import pandas as pd
+import utility as ut
+import odbc
 
-def generate_applicant_data(num_entries, applicant_data):
+
+states = [   #List of the CoE states
+    'Austria', 
+    'Belgium', 
+    'Cyprus', 
+    'Czech Republic', 
+    'Denmark', 
+    'Estonia', 
+    'Finland', 
+    'France', 
+    'Germany', 
+    'Greece', 
+    'Hungary', 
+    'Iceland', 
+    'Ireland', 
+    'Italy', 
+    'Latvia', 
+    'Lithuania', 
+    'Luxembourg', 
+    'Malta', 
+    'Netherlands', 
+    'Norway', 
+    'Poland', 
+    'Portugal', 
+    'Slovakia', 
+    'Slovenia', 
+    'Spain', 
+    'Sweden', 
+    'Switzerland', 
+    'United Kingdom', 
+    'Albania', 
+    'Andorra', 
+    'Armenia', 
+    'Azerbaijan', 
+    'Bosnia and Herzegovina', 
+    'Bulgaria', 
+    'Croatia', 
+    'Georgia', 
+    'Liechtenstein', 
+    'Moldova', 
+    'Monaco', 
+    'Montenegro', 
+    'North Macedonia', 
+    'Romania', 
+    'Russia', 
+    'San Marino', 
+    'Serbia', 
+    'Turkey', 
+    'Ukraine']
+
+#function generating one single judge
+def generateJudge ():
+            
+    policy = {} #Dictionary to be filled in the generation of a random judge
+            
+    df = odbc.exportData('Applicants')  #export a list of potential policies
+    potentials = df.columns.tolist()
+            
+    for i in potentials:
+        
+        coin = random.choice([True, False])    #This chunk represents the generation of individual bias. In lack of different indications, it is considered random, and it may stem from anywhere
+        if coin:
+            policy[i] = rd.randint(-7, 7)
+        else:
+            continue
+            
+    countrynames = rd.choice(states)   #random state out of the candidates (see list at the beginning)
+            
+    firstnames = ut.random_name(8)  #random firstname, genderless. Take that into account
     
-    # Initialize an empty DataFrame to start with
+    lastnames = ut.random_name(8)  #random firstname, genderless. Take that into account
+    
+    role = 'Judge'   #since there are no weights yet on the impact of the president, all judges will be designated as such
+    
+    return Judge (startterm, endterm, countrynames, firstnames, lastnames, role, policies)
 
-    for _ in range(num_entries):
+
+def generateCaucus ():
+    
+    application_no = rd.randint(0,999999)
+    countryname = rd.choice(states)
+    law = randint(-17, 17)
+    fact = randint (-10, 10)
+    application_date = ut.randomDate()
+    judgement_date = ut.randomDate()
+    
+
+
+def generateApplicant(num_entries, applicant_data):
+    
+
+    for i in range(num_entries):
         
-        natural = random.choice([True, False])
+        natural = rd.choice([True, False])
         
-        female = random.choice([True, False]) if natural == True else False
+        female = rd.choice([True, False]) if natural == True else False
         
         # Geographical dummies
         geo_dummies = [False, False, False]  # Southeast Asian, Asian, African
@@ -75,10 +163,10 @@ def generate_applicant_data(num_entries, applicant_data):
         }
         
         # Create a DataFrame for the current entry
-        current_entry_df = pd.DataFrame([entry_dict])
+        df = pd.DataFrame([entry_dict])
 
         # Concatenate the current entry DataFrame to the main DataFrame
-        applicant_data = pd.concat([applicant_data, current_entry_df], ignore_index=True)
+        applicant_data = pd.concat([applicant_data, df], ignore_index=True)
 
     return applicant_data
 
@@ -86,8 +174,8 @@ def generate_applicant_data(num_entries, applicant_data):
 ###The next step is to define the material scope of the case
 
 
-def generate_instance_data(applicant_df, num_cases):
-    instance_data = []
+def generateCase(applicant_df, num_cases):
+    casedata = []
 
     previous_case_id = None
 

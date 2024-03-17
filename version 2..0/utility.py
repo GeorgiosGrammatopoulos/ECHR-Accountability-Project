@@ -72,3 +72,18 @@ def dateInput(commstring, preset = None): #date input function which enables pro
             break
             
     return date
+
+
+#randomizer for dates, for the purposes of simulation
+def randomDate():
+
+    start_date = datetime.date(1954, 1, 1)
+    end_date = datetime.date(datetime.now())
+
+    delta = end_date - start_date
+
+    random_days = random.randint(0, delta.days)
+
+    random_date = start_date + datetime.timedelta(days=random_days)
+
+    return random_date

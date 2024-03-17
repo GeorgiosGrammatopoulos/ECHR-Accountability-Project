@@ -1,6 +1,3 @@
-###Relational dataframes to populate
-
-#Python packages that will be needed
 import pandas as pd
 import string
 import random as rd
@@ -18,98 +15,97 @@ from sklearn.metrics import confusion_matrix, classification_report, roc_auc_sco
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 
+#Setting display options to max rows and columns
+
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
 
 
-class Tests:
+#First: testing the connectivity of the database before pipelining anything
+def odbcTests():
 
-    # Set option to display all columns (None means unlimited)
-    pd.set_option('display.max_columns', None)
+    createDatabase()
+    importData('Cases', application_no = '1313432')
+    df = exportData('Countries', 'Judges', 'Cases', 'Reasonings', 'Applicants')
+    print(df.head(49))
 
-    # Optionally, you can also adjust the number of rows to display
-    pd.set_option('display.max_rows', None)
-
-    #establish a connection with the database
-
-
-
+#Second: testing the judge simulation, if necessary (only relevant for the first part, and for white-box testing, God willing)
+def judgeTests():
 
 
-    #Functions forming the relational data
+    for i in range(1000):
 
-    applicant= pd.DataFrame(data, columns=applicant_col)
-    instance= pd.DataFrame(data, columns = instance_col)
-    reasoning= pd.DataFrame(data, columns=reasoning_col)
-    meta= pd.DataFrame(data, columns=meta_col)
+        example = Judge(startterm = '2014-03-17', endterm = '2019-03-17')
+        example.judgeAppointment()
 
-
-    for col in dummy_columns:
-        if col in applicant.columns:
-            applicant[col] = applicant[col].astype(bool)
-        if col in instance.columns:
-            instance[col] = instance[col].astype(bool)
-        if col in reasoning.columns:
-            reasoning[col] = reasoning[col].astype(bool)
+    df = odbc.exportData('Judges', 'Countries')
+    print(df.head(150))
 
 
+#Third: testing the caucus simulation, if necessary (again, plenty of nature forces will have to conspire to do white box testing)
+def caucusTests():
 
-    def stats(applicant, reasoning, instance):
+    casepolit = rd.randint(-10, 10)
 
-        return print(applicant.head(30), applicant.describe(), reasoning.head(30), reasoning.describe(), instance.head(30), instance.describe(), sep= '\n\n\n')
+    for i in range(1000):
 
-    def check_mean(reasoning):
+        legal = rd.randint(-10, 10)
+        factual = rd.randint(-10, 10)
+        section = rd.randint (1, 10)
 
-        add = 0
+        example = Caucus(
+            application_date = '2024-03-18', 
+            casepolicy = casepolit, 
+            law = legal, 
+            fact = factual, 
+            judgement_date = '2024-03-18',
+            section = '10'
+            )
 
-        for i in range (0, 1000):
+        example.importCaucus()
 
-             add += reasoning['for'].mean()
+    odbc.exportData('Countries', 'Judges', 'Cases', 'Reasonings')
 
-        return add/1000
-
-
-
-    # Assuming you have your instance dataframe (instance) ready
-    applicant = generate_applicant_data(10000, applicant)
-    instance = generate_instance_data(applicant, 1000)
-    reasoning = generate_reasoning_data(instance)
-
-
-
-    ###For the final step: make the judges decide on compensation independently, where the applicant has won
-
-    # Assuming instance_df and reasoning_df are already defined
-    # Update instance_df with win/loss and compensation data
-
-    for i, row in instance.iterrows():
-        case_id = row['case_id']
-        reasoning_row = reasoning[reasoning['case_id'] == case_id].iloc[0]
-
-        # Determine win/loss
-        win = reasoning_row['for'] >= 4
-        instance.at[i, 'win'] = win
-
-        # If the applicant won, calculate awards
-        if win:
-            majority_votes = reasoning_row['for']
-            total_ratio = sum([random.uniform(0.1, 1) for _ in range(majority_votes)]) / majority_votes
-
-            instance.at[i, 'material_award'] = row['material_ask'] * total_ratio
-            instance.at[i, 'non_material_award'] = row['non_material_ask'] * total_ratio
-            instance.at[i, 'ce_award'] = row['ce_ask'] * total_ratio
-            instance.at[i, 'material_diff'] = instance.at[i, 'material_ask'] - instance.at[i, 'material_award']
-            instance.at[i, 'non_material_diff'] = instance.at[i, 'non_material_ask'] - instance.at[i, 'non_material_award']
-            instance.at[i, 'ce_diff'] = instance.at[i, 'ce_ask'] - instance.at[i, 'ce_award']
-        else:
-            instance.at[i, 'material_award'] = 0
-            instance.at[i, 'non_material_award'] = 0
-            instance.at[i, 'ce_award'] = 0
-            instance.at[i, 'material_diff'] = instance.at[i, 'material_ask'] - instance.at[i, 'material_award']
-            instance.at[i, 'non_material_diff'] = instance.at[i, 'non_material_ask'] - instance.at[i, 'non_material_award']
-            instance.at[i, 'ce_diff'] = instance.at[i, 'ce_ask'] - instance.at[i, 'ce_award']
+#Dataset descriptions. Relevant for case parsing
+def initStats():
 
 
+    applicants= odbc.exportData('Applicants')
+    judges= odbc.exportData('Judges')
+    reasonings= odbc.exportData('Reasonings')
+    cases = odbc.exportData('Cases')
 
-    #initial tests
+    print(
+        applicants.head(30), 
+        applicants.describe(), 
+        reasonings.head(30), 
+        reasonings.describe(), 
+        cases.head(30), 
+        cases.describe(), sep= '\n\n\n')
+
+
+    add = 0
+
+    for i in range (0, 1000):
+
+        add += reasonings['favor'].mean()
+
+    print ('\n\n\n\n\n', add/1000, '\n\n\n\n\n\')
+
+
+    for i, row in cases.iterrows():
+        application_row = row['application_no']
+        reasoning_row = reasonings[reasonings['application_no'] == application_row].iloc[0]
+
+        win = reasoning_row['favor'] >= 4
+        cases.at[i, 'win'] = win
+           
+           
+           
+
+#Insert compensation calculation execution here
+           
+
     print('Voting patterns:\n\n\n', reasoning['for'].value_counts(), end = '\n\n\n')
     print('Winning patterns:\n\n\n', instance['win'].value_counts(), end = '\n\n\n')
     stats(applicant, reasoning, instance)
@@ -119,11 +115,6 @@ class Tests:
 
 
     #########################################################     LOGISTIC REGRESSION MODEL FOR WIN RATIO     ############################################################################
-
-
-
-
-
 
 
     # Assuming 'instance' and 'applicant' dataframes are ready
@@ -367,7 +358,5 @@ class Tests:
     print(f"Mean Squared Error: {mse}")
     print(f"R-squared: {r2}")
 
-#################################################### UTILITY ###################################################################
+#################################################### EXECUTE BRACKET ###################################################################
 
-    @staticmethod
-    def mainTests():
