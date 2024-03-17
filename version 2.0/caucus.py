@@ -11,7 +11,11 @@ class Caucus:
     
     #Take particular note of the law and fact arguments: they are allowing for parameterized assessments later on
     def __init__(self, application_no, application_date, countryname, caucus, judgement_date, section, law = None, fact = None):
-         
+        
+        session = odbc.exportData('Judges')
+        for i in caucus:
+            
+            
                  
         self.application_no = application_no
         self.application_date = application_date
