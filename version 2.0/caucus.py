@@ -15,6 +15,7 @@ class Caucus:
         session = odbc.exportData('Judges')
         for i in caucus:
             
+            judgeinfo = session[(session['lastname'] == caucus[0]) & (session['section'] == section)]            
             
                  
         self.application_no = application_no
