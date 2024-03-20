@@ -17,7 +17,18 @@ class Judge:
 
 #This init function allows for policy input, if we become aware of a judge's policies. By default, we are unaware. Same goes for end of term.
 
-    def __init__ (self, startterm, countrynames, firstnames, lastnames, role, section, endterm = None, policies = None #dictionary):
+    def __init__ (
+        self, 
+        startterm, 
+        countrynames, 
+        firstnames, 
+        lastnames, 
+        role, 
+        section = None, 
+        endterm = None, 
+        policy = None, 
+        opinion = None, 
+        vote = None): #the policy bracket is a dictionary
         
         
         self.countryname = countrynames
@@ -25,14 +36,16 @@ class Judge:
         self.lastname = lastnames
         self.role = role
         self.policy = policy
-        self.specifics = specifics
         self.section = section
         self.startterm = startterm
         self.endterm = endterm
+        self.policy = policy
+        self.opinion = opinion
+        self.vote = vote
         
 #Function for inputting judges and making sure that their potential promotions are accounted for
     
-    def judgeAppointment (self):
+    def judgeImport(self):
         
         fulls = odbc.exportData('Judges')
         

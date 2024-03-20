@@ -6,7 +6,6 @@ import utility as ut
 import odbc
 import judge
 import caucus
-import applicant
 
 #Function to store win/loss information in dataframes. The duality of outcomes can also be used to validate other data
 ###When judges decide, they first make an assessment
@@ -65,61 +64,46 @@ def bottomup (judge, law, fact, ruling):
     return ruling
 
 
-#Reasoning for 
+#appending functinon, returns strings, contrary to the tally function
 
-def winLoss (favor, against, *member #:the participant judges):
+def winLoss (caucus, respondent, casepolicy, law, fact):#whereas members :the participant judges
     
-    members = []  #turning the tuple into a list
-    for i in member:
-        members.append(i)
+    result = caucus.votingProcess (self, respondent, casepolicy, law, fact)
     
-    composition = []
-    favor = 0
-    against = 0
-        
-    for i in members:
+    if result:
             
-        if (len(members) == caucus - 1) and (countryname not in composition) and (myjudge.countryname != countryname):
-            continue
+        return 'win'
             
-        if myjudge.countryname in composition:
-            continue
-        else:
-            members.append(myjudge)
-            composition.append(myjudge.countryname           
+    else:
             
-        result = topdown(i, casepolicy, countryname)
-        result = bottomup (i, law, fact, result)
-            
-        if result <= 0:
-                
-            against += 1
-                
-        if result > 0:
-                
-            favor += 1
-                
-        if len(members) == caucus:
-            importData('Reasonings', 'favor', favor)
-            importData('Reasonings', 'against', against)
-            break      
-                
-    if favor > against:
-            
-        outcome = True
-            
-    if favor < against:
-            
-        outcome = False
-    
-    caucus = favor + against
-    
-    if caucus - favor < caucus - against:
-        
         return 'loss'
     
-    if caucus - favor > caucus - against:
+    
+#general calculation function to estimate the amount
+#this function is to be invoked only in the event of a win
+#depending on the overall architecture, I may have to introduce it as well
+
+    def amountCalc(instance, ask, counter): #ask and counter: dictionaries
         
-        return 'win'
-    
-    
+        groups = Subcaucus.formulating(instance)
+        totalDist = groups[0].evaluation + groups[1].evaluation
+        amountDist = ask / totalDist
+        amountDict = {
+            material: None,
+            non_material: None,
+            ce: None
+        }
+        
+        #In theory, material losses and expenses are attributed so long as proven
+        #unless questionable according to the respondent
+        
+        amountDict[material] = ask[material] - counter[material]
+        amountDict[ce] = ask[ce] - counter[ce]
+        
+        amountDict[non_material] =  (groups[1].evaluation - groups[0].evaluation) * amountDist
+        
+        if amountDist <= 0:
+            
+            amountDist = 0
+        
+        return amountDict

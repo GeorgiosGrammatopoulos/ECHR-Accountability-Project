@@ -86,7 +86,7 @@ def connectData():
 
 
 
-
+#single-use function to truncate and create database. TOXIC
 def createDatabase():
     
     check = 0
@@ -162,8 +162,8 @@ def createDatabase():
             'lastname VARCHAR(30),'   #assigned randomly until not
             'role VARCHAR(30),'   #promotion record, Judge in instantiation
             'countryname VARCHAR(30) FOREIGN KEY REFERENCES Countries(countryname),'  #assign at instantiation
-            'startterm DATE,' #assign at instantiation
-            'endterm DATE,' #assign at instantiation, make a corrector
+            'startterm VARCHAR(30),' #assign at instantiation
+            'endterm VARCHAR(30),' #assign at instantiation, make a corrector
             'section VARCHAR(30),' #assign at assignment, starts as null
             'PRIMARY KEY (firstname, lastname, role))' 
             )
@@ -180,13 +180,13 @@ def createDatabase():
         cursor.execute('CREATE TABLE Cases ('
             'application_no VARCHAR(30) PRIMARY KEY,'
             'name VARCHAR(30),'
-            'application_date DATE,'
+            'application_date VARCHAR(30),'
             'countryname VARCHAR(30) FOREIGN KEY REFERENCES Countries(Countryname),'
             'judgement_date VARCHAR(30),'
             'reference VARCHAR(100),'
             'footnote VARCHAR(100),'
             'link VARCHAR(100),'
-            'section VARCHAR(30),
+            'caucus VARCHAR(100),'
             'judges VARCHAR(300))'
             )
             
@@ -240,6 +240,7 @@ def createDatabase():
             'natural BIT,' #dummy indicator of natural persons (to exclude corporate entities etc)
             'southeast_asian_nationality BIT,'  #dummy of nationals of south-east Asian countries
             'asian_nationality BIT,'#dummy of nationals of Asian countries; grouping serves the function of commonplace biases
+            'eastern_european_antionality BIT,' #dummy of nationals of Eastern European countries; grouping serves the function of commonplace biases
             'african_nationality BIT,' #dummy of nationals of African countries
             'undocumented BIT,' #dummy of nationals of undocumented migrants
             'religion_lack BIT,'#dummy of nationals who do not belong in an organized religion
@@ -285,7 +286,7 @@ def createDatabase():
         
         
         
-        
+#general function for import, which filters and converts data into sql
 def importData(table, **imports):
     
     
@@ -319,12 +320,11 @@ def importData(table, **imports):
         
         
         
-
+#general export function, to work with dataframes from the database
 def exportData(*args, connstring = None):
     
     global df
     df = pd.DataFrame()
-    
     
     
     try:
@@ -477,4 +477,4 @@ dummy_columns = [
     'religion_other', 'sexuality_other', 'gender_other', 'radical_political', 
     'radical_social', 'criminal', 'felon', 'official', 'relevance', 
     'contest_law', 'contest_fact', 'law_reasoning', 'fact_reasoning', 'win'
-]sssss
+]

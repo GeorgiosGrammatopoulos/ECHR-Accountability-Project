@@ -1,7 +1,11 @@
 import random as rd
 import pandas as pd
 import utility as ut
+import datetime
 import odbc
+import judge
+import caucus
+import reasonings
 
 
 states = [   #List of the CoE states
@@ -54,124 +58,201 @@ states = [   #List of the CoE states
     'Ukraine']
 
 #function generating one single judge
-def generateJudge ():
+#the pool parameter is essentially a question: do we have a pool of random judges
+#if so, we choose a judge from there; if not, we generate a new one
+def generateJudge (pool = None, index = None):
+    
+    if pool == None:
             
-    policy = {} #Dictionary to be filled in the generation of a random judge
+        policies = {} #Dictionary to be filled in the generation of a random judge
+                
+        df = odbc.exportData('Applicants')  #export a list of potential policies
+        potentials = df.columns.tolist()
+                
+        for i in potentials:
             
-    df = odbc.exportData('Applicants')  #export a list of potential policies
-    potentials = df.columns.tolist()
-            
-    for i in potentials:
+            coin = rd.choice([True, False])    #This chunk represents the generation of individual bias. In lack of different indications, it is considered random, and it may stem from anywhere
+            if coin:
+                policies[i] = rd.randint(-7, 7)
+            else:
+                continue
+                
+        startterm = ut.randomDate()
+        countrynames = rd.choice(states)   #random state out of the candidates (see list at the beginning)
+        firstnames = ut.random_name(8)  #random firstname, genderless. Take that into account
+        lastnames = ut.random_name(8)  #random firstname, genderless. Take that into account
+        role = 'Judge'   #since there are no weights yet on the impact of the president, all judges will be designated as such
+        myjudge = judge.Judge(
+            startterm = startterm, 
+            countrynames = countrynames, 
+            firstnames = firstnames, 
+            lastnames = lastnames, 
+            role = role, 
+            policy = policies
+            )
         
-        coin = random.choice([True, False])    #This chunk represents the generation of individual bias. In lack of different indications, it is considered random, and it may stem from anywhere
-        if coin:
-            policy[i] = rd.randint(-7, 7)
+    else:
+        
+        if index == None:
+            
+            indie = len(pool) - 1            
+            myjudge = pool[rd.randint(0, indie)]
+            
         else:
+            
+            myjudge = pool[index]
+            
+            
+    return myjudge
+        
+        
+
+
+def generateCaucus (respondent):
+    
+    members = []
+    original = []
+    countries = []
+    
+    
+    while True:
+        
+        myjudge = generateJudge()
+
+        if myjudge.countryname in countries:
+            continue
+        if (myjudge.countryname != respondent) and (len(original) == 6):
             continue
             
-    countrynames = rd.choice(states)   #random state out of the candidates (see list at the beginning)
+        myjudge.judgeImport()
+        original.append(myjudge)
+        countries.append(myjudge.countryname)
+        
+        if len(countries) == 7:
             
-    firstnames = ut.random_name(8)  #random firstname, genderless. Take that into account
+            break
+            
+        
+    df = odbc.exportData('Judges')
     
-    lastnames = ut.random_name(8)  #random firstname, genderless. Take that into account
-    
-    role = 'Judge'   #since there are no weights yet on the impact of the president, all judges will be designated as such
-    
-    return Judge (startterm, endterm, countrynames, firstnames, lastnames, role, policies)
-
-
-def generateCaucus ():
-    
+    print(df.shape)
+        
+    for i in range(0, 7):
+        
+        name = df['lastname'].iloc[i]
+        members.append(name)
+        
+    instance = ','.join(members)
     application_no = rd.randint(0,999999)
     countryname = rd.choice(states)
-    law = randint(-17, 17)
-    fact = randint (-10, 10)
+    law = rd.randint(-17, 17)
+    fact = rd.randint (-10, 10)
     application_date = ut.randomDate()
     judgement_date = ut.randomDate()
     
+    
+    mycaucus = caucus.Caucus(
+        application_no, 
+        application_date, 
+        countryname, 
+        instance, 
+        judgement_date,
+        law, 
+        fact
+        )
+            
+    for i in range (0, len(mycaucus.caucus)):
+        
+        mycaucus.caucus[i] = original[i]
+        
+    df = mycaucus.importCaucus()
+    
+    df = df.dropna(subset = ['lastname'])
+    
+    return df
+    
+
 
 
 def generateApplicant(num_entries, applicant_data):
     
-
-    for i in range(num_entries):
+    firstname = ut.random_name()
+    
+    lastname = ut.random_name()
         
-        natural = rd.choice([True, False])
+    natural = rd.choice([True, False])
+
+    female = rd.choice([True, False]) if natural == True else False
         
-        female = rd.choice([True, False]) if natural == True else False
+    geo_dummies = [False, False, False]  # Southeast Asian, Asian, African
+    if natural:
+        geo_index = random.choices([0, 1, 2, 3], weights=[10, 40, 20, 30], k=1)[0]
+        if geo_index != 3:
+            geo_dummies[geo_index] = True
+    if geo_dummies[0] == True:
+        sa_nationality = True
+    elif geo_dummies[1] == True:
+        asian_nationality = True
+    elif geo_dummies[2] == True:
+        african_nationality = True
+    else:
+        ee_nationality = random.choice([True, False])
+            
+    undocumented = any(geo_dummies) and random.choice([True, False])
+    
+    religion_lack = random.choice([True, False]) if natural else False
+    
+    if natural and not religion_lack:
+        religion = random.choices([0, 1, 2], weights=[50, 30, 20], k=1)[0]
+    else:
+        religion = 2
         
-        # Geographical dummies
-        geo_dummies = [False, False, False]  # Southeast Asian, Asian, African
-        if natural:
-            geo_index = random.choices([0, 1, 2, 3], weights=[10, 40, 20, 30], k=1)[0]
-            if geo_index != 3:
-                geo_dummies[geo_index] = True
-        undocumented = any(geo_dummies) and random.choice([True, False])
-        religion_lack = random.choice([True, False]) if natural else False
+    religion_muslim = religion == 0
+    religion_other = religion == 1
         
-        if natural and not religion_lack:
-            religion = random.choices([0, 1, 2], weights=[50, 30, 20], k=1)[0]
-        else:
-            religion = 2
-        religion_muslim = religion == 0
-        religion_other = religion == 1
-        
-        sexuality_other = random.choice([True, False]) if natural else False
-        gender_other = random.choice([True, False]) if natural else False
-        radical_political = random.choice([True, False]) if natural else False
-        radical_social = random.choice([True, False]) if natural else False
-        criminal = random.choice([True, False]) if natural else False
-        felon = random.choice([True, False]) if criminal else False
-        official = random.choice([True, False]) if natural else False
-
-        relevance_dummies = [
-            female, 
-            *geo_dummies, 
-            undocumented, 
-            religion_lack, 
-            religion_muslim, 
-            religion_other, 
-            sexuality_other, 
-            gender_other, 
-            radical_political, 
-            radical_social, 
-            criminal, 
-            felon, 
-            official]
-        relevant = any(random.choice([True, False]) for dummy in relevance_dummies if dummy)
-
-        entry_dict = {
-            'firstname': random_name(),
-            'lastname': random_name(),
-            'female': female,
-            'natural': natural,
-            'southeast_asian_nationality': geo_dummies[0],
-            'asian_nationality': geo_dummies[1],
-            'african_nationality': geo_dummies[2],
-            'undocumented': undocumented,
-            'religion_lack': religion_lack,
-            'religion_muslim': religion_muslim,
-            'religion_other': religion_other,
-            'sexuality_other': sexuality_other,
-            'gender_other': gender_other,
-            'radical_political': radical_political,
-            'radical_social': radical_social,
-            'criminal': criminal,
-            'felon': felon,
-            'official': official,
-            'relevance': relevant
-        }
-        
-        # Create a DataFrame for the current entry
-        df = pd.DataFrame([entry_dict])
-
-        # Concatenate the current entry DataFrame to the main DataFrame
-        applicant_data = pd.concat([applicant_data, df], ignore_index=True)
-
-    return applicant_data
+    sexuality_other = random.choice([True, False]) if natural else False
+    
+    gender_other = random.choice([True, False]) if natural else False
+    
+    radical_political = random.choice([True, False]) if natural else False
+    
+    radical_social = random.choice([True, False]) if natural else False
+    
+    criminal = random.choice([True, False]) if natural else False
+    
+    felon = random.choice([True, False]) if criminal else False
+    
+    official = random.choice([True, False]) if natural else False
+    
+    relevant = any(random.choice([True, False]) for dummy in relevance_dummies if dummy)
+    
+    myapplicant = Applicant(
+        firstname,
+        lastname,
+        nationality,
+        female,
+        natural,
+        sa_nationality,
+        ee_nationality,
+        asian_nationality,
+        african_nationality,
+        undocumented,
+        religion_lack,
+        religion_muslim,
+        religion_other,
+        sexuality_other,
+        gender_other,
+        radical_political, 
+        radical_social,
+        criminal,
+        felon,
+        official,
+        relevant
+        )
+    
+    
 
 
-###The next step is to define the material scope of the case
 
 
 def generateCase(applicant_df, num_cases):
@@ -254,4 +335,80 @@ def generate_reasoning_data(instance):
         all_entries.append(entry_df)
 
     return pd.concat(all_entries, ignore_index=True)
+
+
+
+
+
+
+
+
+
+
+
+    
+####################### WHITE BOX UNIT TESTS ###########################
+
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+
+#Unit 1: Database connection, creation, import, export
+
+#Code:
+#odbc.connectData()
+#odbc.createDatabase()
+#odbc.importData(
+#    'Judges', 
+#    firstname = ut.random_name(), 
+#    lastname = ut.random_name(), 
+#    role = 'Judge'
+#    )
+#df = odbc.exportData('Judges')
+#print(df.head(1))
+
+#Result: success
+
+#----------------------------------------------------------------------#
+
+#Unit 2: Judge random generation
+
+#Code
+#myjudge = generateJudge()
+#print(myjudge.firstname, myjudge.lastname, myjudge.startterm, sep = "\n")
+
+#Result: success
+
+#----------------------------------------------------------------------#
+
+#Unit 3: Parsing judge into database
+
+#Code
+#odbc.createDatabase()
+#myjudge = generateJudge()
+#myjudge.judgeImport()
+#df = odbc.exportData('Judges')
+#print(df.head(1))
+
+#Result: success
+
+#----------------------------------------------------------------------#
+
+#Unit 4: Building an effective caucus
+
+#Code:
+#odbc.createDatabase()
+#mycaucus = generateCaucus('Andorra')
+#print(mycaucus.head(10))
+
+#Result: success
+
+#----------------------------------------------------------------------#
+
+#Unit 4: Building an effective applicant
+#Code:
+
+
+#Result: success
+
+#----------------------------------------------------------------------#
 

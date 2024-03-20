@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 import random
 import string
 
@@ -76,9 +76,9 @@ def dateInput(commstring, preset = None): #date input function which enables pro
 
 #randomizer for dates, for the purposes of simulation
 def randomDate():
-
     start_date = datetime.date(1954, 1, 1)
-    end_date = datetime.date(datetime.now())
+    
+    end_date = datetime.date.today()
 
     delta = end_date - start_date
 
