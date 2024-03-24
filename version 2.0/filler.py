@@ -5,7 +5,8 @@ import datetime
 import odbc
 import judge
 import caucus
-import reasonings
+import reasonings as rs
+import applicant
 
 
 states = [   #List of the CoE states
@@ -60,7 +61,7 @@ states = [   #List of the CoE states
 #function generating one single judge
 #the pool parameter is essentially a question: do we have a pool of random judges
 #if so, we choose a judge from there; if not, we generate a new one
-def generateJudge (pool = None, index = None):
+def generateJudge (pool = None, listing = None, index = None):
     
     if pool == None:
             
@@ -73,7 +74,7 @@ def generateJudge (pool = None, index = None):
             
             coin = rd.choice([True, False])    #This chunk represents the generation of individual bias. In lack of different indications, it is considered random, and it may stem from anywhere
             if coin:
-                policies[i] = rd.randint(-7, 7)
+                policies[i] = rd.randint(10, 20)
             else:
                 continue
                 
@@ -90,17 +91,39 @@ def generateJudge (pool = None, index = None):
             role = role, 
             policy = policies
             )
+    elif listing:
         
-    else:
-        
-        if index == None:
+        if index:
             
-            indie = len(pool) - 1            
-            myjudge = pool[rd.randint(0, indie)]
+            return listing[index]
             
         else:
             
-            myjudge = pool[index]
+            return listing [rd.randint(0, len(listing))]
+        
+    else:
+        
+        judges = []
+        pool = exportData('Judges')
+        
+        for i in range(0, pool.shape[0]):
+            myjudge = judge.Judge(
+                startterm = pool.loc[i, 'startterm'], 
+                countrynames = pool.loc[i, 'countrynames'], 
+                firstnames = pool.loc[i, 'firstnames'], 
+                lastnames = pool.loc[i, 'lastnames'], 
+                role = pool.loc[i, 'role'], 
+                section = pool.loc[i, 'section'], 
+                endterm = pool.loc[i, 'endterm'], 
+                opinion = pool.loc[i, 'opinion'],
+                )
+            judges.append[myjudge]
+        
+        if index == None:
+            indie = len(judges)        
+            myjudge = judges[rd.randint(0, indie)]
+        else:
+            myjudge = judges[index]
             
             
     return myjudge
@@ -108,7 +131,7 @@ def generateJudge (pool = None, index = None):
         
 
 
-def generateCaucus (respondent):
+def generateCaucus (respondent, application_no = None, pool = None, listing = None, index = None):
     
     members = []
     original = []
@@ -117,11 +140,11 @@ def generateCaucus (respondent):
     
     while True:
         
-        myjudge = generateJudge()
+        myjudge = generateJudge(pool = pool, listing = listing, index = index)
 
         if myjudge.countryname in countries:
             continue
-        if (myjudge.countryname != respondent) and (len(original) == 6):
+        if (myjudge.countryname != respondent) and (len(countries) == 6):
             continue
             
         myjudge.judgeImport()
@@ -143,8 +166,8 @@ def generateCaucus (respondent):
         members.append(name)
         
     instance = ','.join(members)
-    application_no = rd.randint(0,999999)
-    countryname = rd.choice(states)
+    if application_no == None:
+        application_no = rd.randint(0,999999)
     law = rd.randint(-17, 17)
     fact = rd.randint (-10, 10)
     application_date = ut.randomDate()
@@ -154,7 +177,7 @@ def generateCaucus (respondent):
     mycaucus = caucus.Caucus(
         application_no, 
         application_date, 
-        countryname, 
+        respondent, 
         instance, 
         judgement_date,
         law, 
@@ -167,14 +190,19 @@ def generateCaucus (respondent):
         
     df = mycaucus.importCaucus()
     
-    df = df.dropna(subset = ['lastname'])
+    df = df.dropna(subset = ['lastname']).reset_index(drop = True)
     
-    return df
+    return [mycaucus, df]
     
 
 
 
-def generateApplicant(num_entries, applicant_data):
+def generateApplicant(application_no = None):
+    
+    listed = odbc.exportData('Applicants')
+    
+    if application_no == None:
+        application_no = listed.shape[0]
     
     firstname = ut.random_name()
     
@@ -183,58 +211,88 @@ def generateApplicant(num_entries, applicant_data):
     natural = rd.choice([True, False])
 
     female = rd.choice([True, False]) if natural == True else False
-        
-    geo_dummies = [False, False, False]  # Southeast Asian, Asian, African
-    if natural:
-        geo_index = random.choices([0, 1, 2, 3], weights=[10, 40, 20, 30], k=1)[0]
-        if geo_index != 3:
-            geo_dummies[geo_index] = True
-    if geo_dummies[0] == True:
-        sa_nationality = True
-    elif geo_dummies[1] == True:
-        asian_nationality = True
-    elif geo_dummies[2] == True:
-        african_nationality = True
-    else:
-        ee_nationality = random.choice([True, False])
-            
-    undocumented = any(geo_dummies) and random.choice([True, False])
     
-    religion_lack = random.choice([True, False]) if natural else False
+    sa_nationality = False
+    ee_nationality = False
+    asian_nationality = False
+    african_nationality = False
+    geo_dummies = {
+        'sa_nationality': False, 
+        'ee_nationality' : False, 
+        'asian_nationality' : False, 
+        'african_nationality' : False
+        }
+    if natural:
+        geo_dummies['sa_nationality'] = rd.choices([True, False], weights = [10, 90])[0]
+        if geo_dummies['sa_nationality'] == True:
+            pass
+        else:
+            geo_dummies['asian_nationality'] = rd.choices([True, False], weights = [40, 60])[0]
+            if geo_dummies['asian_nationality'] == True:
+                pass
+            else:
+                geo_dummies['african_nationality'] = rd.choices([True, False], weights = [20, 80])[0]
+                if geo_dummies['african_nationality'] == True:
+                    pass
+                else:
+                    geo_dummies['ee_nationality'] = rd.choices([True, False], weights = [30, 70])[0]
+        sa_nationality = geo_dummies['sa_nationality']
+        ee_nationality = geo_dummies['ee_nationality']
+        asian_nationality = geo_dummies['asian_nationality']
+        african_nationality = geo_dummies['african_nationality']
+          
+            
+    undocumented = any(geo_dummies.values()) and rd.choice([True, False])
+    
+    religion_lack = rd.choice([True, False]) if natural else False
     
     if natural and not religion_lack:
-        religion = random.choices([0, 1, 2], weights=[50, 30, 20], k=1)[0]
+        religion = rd.choices([0, 1, 2], weights=[50, 30, 20], k=1)[0]
     else:
         religion = 2
         
     religion_muslim = religion == 0
     religion_other = religion == 1
         
-    sexuality_other = random.choice([True, False]) if natural else False
+    sexuality_other = rd.choice([True, False]) if natural else False
     
-    gender_other = random.choice([True, False]) if natural else False
+    gender_other = rd.choice([True, False]) if natural else False
     
-    radical_political = random.choice([True, False]) if natural else False
+    radical_political = rd.choice([True, False]) if natural else False
     
-    radical_social = random.choice([True, False]) if natural else False
+    radical_social = rd.choice([True, False]) if natural else False
     
-    criminal = random.choice([True, False]) if natural else False
+    criminal = rd.choice([True, False]) if natural else False
     
-    felon = random.choice([True, False]) if criminal else False
+    felon = rd.choice([True, False]) if criminal else False
     
-    official = random.choice([True, False]) if natural else False
+    official = rd.choice([True, False]) if natural else False
     
-    relevant = any(random.choice([True, False]) for dummy in relevance_dummies if dummy)
+    listed = odbc.exportData('Applicants')
+    listed = listed.columns.tolist()
+    relevant = any(rd.choice([True, False]) for dummy in listed)
     
-    myapplicant = Applicant(
+    nationality = None
+    count = 0
+    for key,value in geo_dummies.items():
+        if value == True:
+            print(f'{key}')
+            nationality = f'{key}'
+            break
+        else:
+            count+=1
+    if count == 4:
+        nationality = 'first world'
+    
+    myapplicant = applicant.Applicant(
         firstname,
         lastname,
         nationality,
         female,
         natural,
         sa_nationality,
-        ee_nationality,
         asian_nationality,
+        ee_nationality,
         african_nationality,
         undocumented,
         religion_lack,
@@ -247,96 +305,164 @@ def generateApplicant(num_entries, applicant_data):
         criminal,
         felon,
         official,
-        relevant
+        relevant,
+        application_no
         )
     
+    myapplicant.importApplcant()
+    
+    return myapplicant
+
+
+
+
+def generateCase():
+    
+    elects = []
+    for i in range(0, 300):
+        elect = generateJudge()
+        elects.append(elect)
+        
+    listed = odbc.exportData('Cases')
+    application_no = listed.shape[0]
+    
+    countryname = rd.choice(states) 
+    
+    caucus = generateCaucus(countryname, application_no = application_no, listing = elects)
+    
+    main = caucus[0]
     
 
-
-
-
-def generateCase(applicant_df, num_cases):
-    casedata = []
-
-    previous_case_id = None
-
-    for i in range(num_cases):
-        # Fetch first name and last name from the applicant dataframe
-        first_name = applicant_df.loc[i % len(applicant_df), 'firstname']
-        last_name = applicant_df.loc[i % len(applicant_df), 'lastname']
-
-        # Generate case ID
-        if i == 0 or random.choice([True, False]):  # 50% chance to share a case ID with the previous one
-            case_id = f"case_{i + 1}"
-        else:
-            case_id = previous_case_id
-
-        # Randomly assign values to other columns
-        statute = random.randint(1, 20)
-        material_ask = random.randint(0, 99999)
-        non_material_ask = random.randint(0, 99999)
-        ce_ask = random.randint(0, 99999)
-
-        # Prepare the entry
-        entry = {
-            'case_id': case_id,
-            'statute': statute,
-            'firstname': first_name,
-            'lastname': last_name,
-            'win': None,  # To be filled later
-            'material_ask': material_ask,
-            'non_material_ask': non_material_ask,
-            'ce_ask': ce_ask,
-            'material_award': None,  # To be filled later
-            'non_material_award': None,  # To be filled later
-            'ce_award': None  # To be filled later
-        }
-
-        instance_data.append(entry)
-        previous_case_id = case_id
-
-    return pd.DataFrame(instance_data)
-
-
-
-def generate_reasoning_data(instance):
+    x = rd.choices(
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 
+        weights=[1000, 500, 300, 200, 100, 50, 250, 120, 6, 3], 
+        k=1)[0]
+    for i in range (0, x):
+        generateApplicant(application_no)
+        
+    df = odbc.exportData('Cases')
     
-    all_entries = []
-    used_case_ids = set()
+    return caucus
     
-    for _, row in instance.iterrows():
-        case_id = row['case_id']
+    
+    
+def generateReasoning():
 
-        if case_id in used_case_ids:
-            continue
-        used_case_ids.add(case_id)
-
-        respondent = random.choice(council_of_europe_states)
-        contest_law = random.choice([True, False])
-        contest_fact = random.choice([True, False])
-        law_reasoning = random.choice([True, False]) if contest_law == False else True
-        fact_reasoning = random.choice([True, False]) if contest_fact else False
-
-        judge_decision = combined_mock_judge_decision()
-        votes_for = judge_decision["In favor of litigant 2 (third party)"]
-
-        entry_df = pd.DataFrame([{
-            'case_id': case_id,
-            'respondent': respondent,
-            'contest_law': contest_law,
-            'contest_fact': contest_fact,
-            'law_reasoning': law_reasoning,
-            'fact_reasoning': fact_reasoning,
-            'national_judge': False if national_judge_decision == 1 else True,
-            'for': votes_for,
-            'total': 7  # Total number of judges
-         }])
-
-        all_entries.append(entry_df)
-
-    return pd.concat(all_entries, ignore_index=True)
-
-
+    instance = generateCase()
+    instance = instance[0]
+    parties = odbc.exportData('Applicants')
+    parties = parties.query(f'application_no == {instance.application_no}')
+    policies = []
+    law = rd.randint(0, 17)
+    fact = rd.randint (-10, 10)
+    
+    for i in parties.columns.tolist():
+        
+         for k in range(0, parties.shape[0]):
+             
+             if parties.loc[k, i] == True:
+                 policies.append(i)
+    
+    first_result = rs.winLoss(instance, instance.countryname, policies, law, fact)
+    
+    contestl = False
+    if law > 8:
+        contestl = True
+        
+    resl = False
+    if law > 0:
+        resl = True
+        
+    contestlf= False
+    if fact > 8:
+        contestf = True
+        
+    resf= False
+    if fact > 0:
+        resf = True
+    
+    print(law)
+    print(fact)
+    print(parties.head())
+    
+    dictAsk = {
+        'material': rd.randint(1, 99999),
+        'non_material': rd.randint(1, 99999),
+        'ce': rd.randint(1, 9999)
+    }
+        
+    dictCounter = {
+        'material': 0,
+        'non_material': 0,
+        'ce': 0
+    }
+    
+    if first_result[2] == 'win':
+        
+        for i in range(0, parties.shape[0]):
+        
+            amounts = rs.amountCalc(instance, dictAsk, dictCounter)
+            
+            mdiff =  dictAsk['material'] - amounts['material']
+            nmdiff = dictAsk['non_material'] - amounts['non_material']
+            cediff = dictAsk['ce'] - amounts['ce']
+            
+            odbc.importData('Reasonings',
+                application_no = instance.application_no,
+                firstname = parties.loc[i, 'firstname'],
+                lastname = parties.loc[i, 'lastname'],
+                contest_law = contestl,
+                contest_lawres = resl,
+                contest_fact = contestl,
+                contest_factres = resf,
+                statute = '99',
+                favor = first_result[0],
+                against = first_result[1],
+                dissent_nj = False,
+                material_ask = dictAsk['material'],
+                non_material_ask = dictAsk['non_material'],
+                ce_ask = dictAsk['ce'],
+                material_award = amounts['material'],
+                non_material_award = amounts['non_material'],
+                ce_award = amounts['ce'],
+                material_diff = mdiff,
+                non_material_diff = nmdiff,
+                ce_diff = cediff,
+                )
+    
+    
+    else:
+        
+        for i in range(0, parties.shape[0]):
+            
+            odbc.importData('Reasonings',
+                application_no = instance.application_no,
+                firstname = parties.loc[i, 'firstname'],
+                lastname = parties.loc[i, 'lastname'],
+                contest_law = contestl,
+                contest_lawres = resl,
+                contest_fact = contestl,
+                contest_factres = resf,
+                statute = '99',
+                favor = first_result[0],
+                against = first_result[1],
+                dissent_nj = False,
+                material_ask = dictAsk['material'],
+                non_material_ask = dictAsk['non_material'],
+                ce_ask = dictAsk['ce'],
+                material_award = 0,
+                non_material_award =  0,
+                ce_award = 0,
+                material_diff = 0,
+                non_material_diff = 0,
+                ce_diff = 0
+                )
+        
+    df = odbc.exportData('Reasonings')
+    df = df.query(f'application_no == {instance.application_no}')
+    print('\n\n\n\n', first_result[2], '\n\n\n\n')
+    return df
+            
 
 
 
@@ -404,9 +530,39 @@ pd.set_option('display.max_rows', None)
 
 #----------------------------------------------------------------------#
 
-#Unit 4: Building an effective applicant
+#Unit 5: Building an effective applicant
 #Code:
+#odbc.createDatabase()
+#for i in range(0, 100):
+#    generateApplicant()
+#df = odbc.exportData('Applicants')
+#print(df.head(100))
 
+#Result: success
+
+#----------------------------------------------------------------------#
+
+#Unit 6: Building an effective case
+#Code:
+#odbc.createDatabase()
+#df = generateCase()
+#print (df.head(1))
+#applicants = odbc.exportData('Applicants')
+#judges = odbc.exportData('Judges')
+#print(applicants.head(30))
+#print(judges.head(30))
+
+#Result: success
+
+#----------------------------------------------------------------------#
+
+
+#Unit 7: Building an effective reasoning
+
+#Code:
+odbc.createDatabase()
+df = generateReasoning()
+print(df.head(20))
 
 #Result: success
 

@@ -5,6 +5,7 @@ import judge
 import odbc
 import utility as ut
 import string
+import reasonings as rs
 
 #This class generates the caucus that we need to adjudicate a case. 
 #Each caucus is unique to a case - hence, the workings here correspond with the Cases table in the database (check odbc).
@@ -88,8 +89,8 @@ class Caucus:
         
         for i in self.caucus:
             
-            opinion = topdown(i, casepolicy, respondent)
-            opinion = bottomup (i, law, fact, opinion)
+            opinion = rs.topdown(i, casepolicy, respondent)
+            opinion = rs.bottomup (i, law, fact, opinion)
             
             if opinion > 0:        #the applicant bears the burden of proof. than amounts for the 0
                 i.vote = True
@@ -103,11 +104,13 @@ class Caucus:
             
         if tallyfavor > tallyagainst:
             
-            return True
+            outcome = True
             
         else:
             
-            return False
+            outcome = False
+            
+        return [tallyfavor, tallyagainst, outcome]
         
         
 #after voting, judges tend to congregate. this subclass represents that
@@ -121,7 +124,7 @@ class Subcaucus(Caucus):
         self.label = label
         for i in supers.caucus:
             
-            if i.caucus == label:
+            if i.vote == label:
             
                 members.append(i)
                 evaluation += i.opinion   #splitting judges according to their vote

@@ -1,6 +1,11 @@
+import pandas as pd
+import odbc
+import utility
+
 class Applicant:
     
     def __init__(
+        self,
         firstname,
         lastname,
         nationality,
@@ -23,7 +28,7 @@ class Applicant:
         official,
         relevance,
         application_no = None
-        )
+        ):
             
         self.firstname = firstname
         self.lastname = lastname
@@ -51,21 +56,23 @@ class Applicant:
             
     def importApplcant(self):
         
-        if not ((fulls['lastname'] == self.lastname) & (fulls['firstname'] == self.firstname) & (fulls['role'] == self.role)).any():
+        fulls = odbc.exportData('Applicants')
+        
+        if not ((fulls['lastname'] == self.lastname) & (fulls['firstname'] == self.firstname) & (fulls['application_no'] == self.application_no)).any():
         #contigency: if a judge becomes promoted, they are re-inserted, only under a different role
         #will prove useful when we will test individual records and weights of presidents' opinion
         
             odbc.importData(
-                'Judges',          
+                'Applicants',          
                 firstname = f'{self.firstname}',
                 lastname = f'{self.lastname}',
                 application_no = f'{self.application_no}',
                 nationality = f'{self.nationality}',
-                female = f'{self.female = female}',
-                natural = f'{self.natural = natural}',
+                female = f'{self.female}',
+                natural = f'{self.natural}',
                 southeast_asian_nationality = f'{self.sa_nationality}',
-                asian_nationality = f'{self.ee_nationality}',
                 eastern_european_antionality = f'{self.asian_nationality}',
+                asian_nationality = f'{self.ee_nationality}',
                 african_nationality = f'{self.african_nationality}',
                 undocumented = f'{self.undocumented}',
                 religion_lack = f'{self.non_religious}',
@@ -79,8 +86,6 @@ class Applicant:
                 felon = f'{self.felon}',
                 official = f'{self.official}',
                 relevance = f'{self.relevance}')
-                    
-            firstname = f'{nfirstname}', lastname = f'{nlastname}', role = f'{nrole}', startterm = f'{nstartterm}', endterm = f'{nendterm}', countryname = f'{ncountryname}')
                   
             return self
         

@@ -239,8 +239,8 @@ def createDatabase():
             'female BIT,'   #dummy indicator of female applicants
             'natural BIT,' #dummy indicator of natural persons (to exclude corporate entities etc)
             'southeast_asian_nationality BIT,'  #dummy of nationals of south-east Asian countries
-            'asian_nationality BIT,'#dummy of nationals of Asian countries; grouping serves the function of commonplace biases
             'eastern_european_antionality BIT,' #dummy of nationals of Eastern European countries; grouping serves the function of commonplace biases
+            'asian_nationality BIT,'#dummy of nationals of Asian countries; grouping serves the function of commonplace biases
             'african_nationality BIT,' #dummy of nationals of African countries
             'undocumented BIT,' #dummy of nationals of undocumented migrants
             'religion_lack BIT,'#dummy of nationals who do not belong in an organized religion

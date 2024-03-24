@@ -20,7 +20,7 @@ def topdown (judge, casepolicy, respondent):
         denom += -15   #imperative weight in favor of the respondent, only surpassed by the law
         priority -=1   #for the moment, there is no specific prioritization in hand
         
-    for i, k in self.policy.items():
+    for i, k in judge.policy.items():
                 
         if i in casepolicy:
                     
@@ -68,42 +68,48 @@ def bottomup (judge, law, fact, ruling):
 
 def winLoss (caucus, respondent, casepolicy, law, fact):#whereas members :the participant judges
     
-    result = caucus.votingProcess (self, respondent, casepolicy, law, fact)
+    result = caucus.votingProcess (respondent, casepolicy, law, fact)
+    tallyfavor = result[0]
+    tallyagainst = result[1]
+    result = result[2]
     
     if result:
             
-        return 'win'
+        return [tallyfavor, tallyagainst, 'win']
             
     else:
             
-        return 'loss'
+        return [tallyfavor, tallyagainst, 'loss']
     
     
 #general calculation function to estimate the amount
 #this function is to be invoked only in the event of a win
 #depending on the overall architecture, I may have to introduce it as well
 
-    def amountCalc(instance, ask, counter): #ask and counter: dictionaries
+def amountCalc(instance, ask, counter): #ask and counter: dictionaries
         
-        groups = Subcaucus.formulating(instance)
-        totalDist = groups[0].evaluation + groups[1].evaluation
-        amountDist = ask / totalDist
-        amountDict = {
-            material: None,
-            non_material: None,
-            ce: None
-        }
+    groups = caucus.Subcaucus.formulating(instance)
+    totalDist = groups[0].evaluation + groups[1].evaluation
+    amountDist = ask / totalDist
         
-        #In theory, material losses and expenses are attributed so long as proven
-        #unless questionable according to the respondent
+    #In theory, material losses and expenses are attributed so long as proven
+    #unless questionable according to the respondent
+    
+    amountDict = {
+        'material': None,
+        'non_material': None,
+        'ce': None
+    }
         
-        amountDict[material] = ask[material] - counter[material]
-        amountDict[ce] = ask[ce] - counter[ce]
+    amountDict['material'] = ask['material'] - counter['material']
+    amountDict['ce'] = ask['ce'] - counter['ce']
+    amountDict['non_material'] =  (groups[1].evaluation - groups[0].evaluation) * amountDist
         
-        amountDict[non_material] =  (groups[1].evaluation - groups[0].evaluation) * amountDist
+    for key, value in amountDict.items():
         
-        if amountDist <= 0:
+        if value <= 0:
             
-            amountDist = 0
+            value = 0
+    
         
-        return amountDict
+    return amountDict
