@@ -165,6 +165,7 @@ def createDatabase():
             'startterm VARCHAR(30),' #assign at instantiation
             'endterm VARCHAR(30),' #assign at instantiation, make a corrector
             'section VARCHAR(30),' #assign at assignment, starts as null
+            'opinion INT,'
             'PRIMARY KEY (firstname, lastname, role))' 
             )
             

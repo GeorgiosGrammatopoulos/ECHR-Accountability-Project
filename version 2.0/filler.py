@@ -74,7 +74,7 @@ def generateJudge (pool = None, listing = None, index = None):
             
             coin = rd.choice([True, False])    #This chunk represents the generation of individual bias. In lack of different indications, it is considered random, and it may stem from anywhere
             if coin:
-                policies[i] = rd.randint(10, 20)
+                policies[i] = rd.randint(-9, 9)
             else:
                 continue
                 
@@ -168,7 +168,7 @@ def generateCaucus (respondent, application_no = None, pool = None, listing = No
     instance = ','.join(members)
     if application_no == None:
         application_no = rd.randint(0,999999)
-    law = rd.randint(-17, 17)
+    law = rd.randint(-10, 10)
     fact = rd.randint (-10, 10)
     application_date = ut.randomDate()
     judgement_date = ut.randomDate()
@@ -330,6 +330,12 @@ def generateCase():
     
     caucus = generateCaucus(countryname, application_no = application_no, listing = elects)
     
+    judges = caucus[0]
+    judges = judges.caucus
+    
+    for i in judges:
+        print(i.policy)
+    
     main = caucus[0]
     
 
@@ -349,11 +355,12 @@ def generateCase():
 def generateReasoning():
 
     instance = generateCase()
+    dfinstance = instance[1]
     instance = instance[0]
     parties = odbc.exportData('Applicants')
     parties = parties.query(f'application_no == {instance.application_no}')
     policies = []
-    law = rd.randint(0, 17)
+    law = rd.randint(-10, 10)
     fact = rd.randint (-10, 10)
     
     for i in parties.columns.tolist():
@@ -366,23 +373,23 @@ def generateReasoning():
     first_result = rs.winLoss(instance, instance.countryname, policies, law, fact)
     
     contestl = False
-    if law > 8:
+    if law > 5 or law < -5:
         contestl = True
         
     resl = False
-    if law > 0:
+    if (first_result[3] == 'win') and (contestl):
         resl = True
         
     contestlf= False
-    if fact > 8:
+    if fact > 5 or fact < -5:
         contestf = True
         
     resf= False
-    if fact > 0:
+    if first_result[3] == 'win':
         resf = True
     
-    print(law)
-    print(fact)
+    print(f'Legal position: {law}')
+    print(f'Factual assessment: {fact}')
     print(parties.head())
     
     dictAsk = {
@@ -395,7 +402,8 @@ def generateReasoning():
         'material': 0,
         'non_material': 0,
         'ce': 0
-    }
+    }    
+    
     
     if first_result[2] == 'win':
         
@@ -403,9 +411,14 @@ def generateReasoning():
         
             amounts = rs.amountCalc(instance, dictAsk, dictCounter)
             
+            print(amounts.items())
+            
             mdiff =  dictAsk['material'] - amounts['material']
-            nmdiff = dictAsk['non_material'] - amounts['non_material']
+            print(mdiff)
+            nmdiff = int(dictAsk['non_material'] - amounts['non_material'])
+            print(nmdiff)
             cediff = dictAsk['ce'] - amounts['ce']
+            print(cediff)
             
             odbc.importData('Reasonings',
                 application_no = instance.application_no,
@@ -416,8 +429,8 @@ def generateReasoning():
                 contest_fact = contestl,
                 contest_factres = resf,
                 statute = '99',
-                favor = first_result[0],
-                against = first_result[1],
+                favor = len(first_result[0]),
+                against = len(first_result[1]),
                 dissent_nj = False,
                 material_ask = dictAsk['material'],
                 non_material_ask = dictAsk['non_material'],
@@ -437,15 +450,15 @@ def generateReasoning():
             
             odbc.importData('Reasonings',
                 application_no = instance.application_no,
-                firstname = parties.loc[i, 'firstname'],
-                lastname = parties.loc[i, 'lastname'],
+                firstname = str(parties.loc[i, 'firstname']),
+                lastname = (parties.loc[i, 'lastname']),
                 contest_law = contestl,
                 contest_lawres = resl,
                 contest_fact = contestl,
                 contest_factres = resf,
                 statute = '99',
-                favor = first_result[0],
-                against = first_result[1],
+                favor = len(first_result[0]),
+                against = len(first_result[1]),
                 dissent_nj = False,
                 material_ask = dictAsk['material'],
                 non_material_ask = dictAsk['non_material'],

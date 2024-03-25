@@ -29,7 +29,7 @@ class Caucus:
         instances = instance.split(',')  #in input functions, the caucus will be a string of judge lastnames
         members = []
         
-        for i in range(0, len(instances) - 1):
+        for i in range(0, len(instances)):
             #make sure it''s the right judge, in the right session
             #it may become necessary to constrain terms for seizing
             
@@ -84,25 +84,37 @@ class Caucus:
      #but that is a matter of refinement rather than specific policy
     def votingProcess (self, respondent, casepolicy, law, fact):
         
-        tallyfavor = 0
-        tallyagainst = 0
+        tallyfavor = []
+        votefavor = 0
+        tallyagainst = []
+        voteagainst= 0
+        opinions = []
+         
         
         for i in self.caucus:
             
-            opinion = rs.topdown(i, casepolicy, respondent)
+            opinion = rs.topdown(i, casepolicy, respondent) 
+            
+            print(f'Opinion before assessing : {opinion}')
+            
             opinion = rs.bottomup (i, law, fact, opinion)
+            
+            print(f'Opinion after assessing : {opinion}')
             
             if opinion > 0:        #the applicant bears the burden of proof. than amounts for the 0
                 i.vote = True
-                tallyfavor += 1
+                votefavor += 1
+                tallyfavor.append(i)
             if opinion<= 0:
                 i.vote = False
-                tallyagainst += 1
+                voteagainst += 1
+                tallyagainst.append(i)
                 
             i.opinion = opinion
+            opinions.append(opinion)
             
             
-        if tallyfavor > tallyagainst:
+        if votefavor > voteagainst:
             
             outcome = True
             
@@ -110,32 +122,34 @@ class Caucus:
             
             outcome = False
             
-        return [tallyfavor, tallyagainst, outcome]
+        opinions = dict(zip(self.caucus, opinions))
+        
+        print(opinions.values())
+            
+        return [tallyfavor, tallyagainst, outcome, opinions]
         
         
 #after voting, judges tend to congregate. this subclass represents that
 class Subcaucus(Caucus):
     
-    def __init__(self, label,supers, evaluation = 0):  #label is a boolean which determines win-loss
+    def __init__(self, label, supers, evaluate=0):  #label is a boolean which determines win-loss
                                                         #supers is an instance of Caucus - must exist before instantiating
-        
-        members = []        
+        members = []
+        evaluation = evaluate      
         
         self.label = label
         for i in supers.caucus:
             
             if i.vote == label:
-            
+                
                 members.append(i)
                 evaluation += i.opinion   #splitting judges according to their vote
                 
             
-        self.application_no = super().application_no
-        self.application_date = super().application_date
-        self.countryname = super().countryname
-        self.judgement_date = super().judgement_date
-        self.law = super().law
-        self.fact = super().fact
+        self.application_no = supers.application_no
+        self.application_date = supers.application_date
+        self.countryname = supers.countryname
+        self.judgement_date = supers.judgement_date
         self.caucus = members
         self.evaluation = evaluation
         
@@ -145,10 +159,14 @@ class Subcaucus(Caucus):
     def formulating(supers):
         
         grouping = []
+        indicators = [False, True]
+        print(indicators[0])
         
-        for i in [False, True]:  #notice how the indexes represent true and false
+        for i in indicators:  #notice how the indexes represent true and false
             
             interobj = Subcaucus(i, supers)
             grouping.append(interobj)
+            
+            print (len(interobj.caucus))
             
         return tuple(grouping)

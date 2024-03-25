@@ -11,13 +11,13 @@ import caucus
 ###When judges decide, they first make an assessment
     
 def topdown (judge, casepolicy, respondent):
-
-    denom = 0
+    
+    slope = 0
     priority = len(judge.policy.keys())
         
     if judge.countryname == respondent:
             
-        denom += -15   #imperative weight in favor of the respondent, only surpassed by the law
+        slope += -15   #imperative weight in favor of the respondent, only surpassed by the law
         priority -=1   #for the moment, there is no specific prioritization in hand
         
     for i, k in judge.policy.items():
@@ -26,42 +26,41 @@ def topdown (judge, casepolicy, respondent):
                     
             try:
                     
-                denom += k//priority
+                slope += k//priority
                 priority -= 1
                 continue
                         
             except ZeroDivisionError:
                         
-                denom += k // priority - 1
+                slope += k // priority - 1
                 priority -= 1
                 continue
                         
                     
-    return denom
+    return slope
     
         
  #Then, they account for the law and the assessment of the facts.
  #Assessing the facts is a group process. That will become relevant later on.
                   
-def bottomup (judge, law, fact, ruling):
+def bottomup (judge, law, fact, opinion):
         
-    if law == 0:    #weight is designed under the assumption that the law is the most imperative outcome
+    if {law >= -5} and (law <= 5):    #weight is designed under the assumption that the law is the most imperative outcome
         pass
-    elif law == 1:
-        ruling +=17
-    elif law == -1:
-        ruling -=17
+    elif law < -5:
+        opinion += -20
+    elif law > 5:
+        opinion += 20
             
             
-    if fact == 0:   #weight places 
+    if {fact >= -5} and (fact <= 5):    #weight is designed under the assumption that the law is the most imperative outcome
         pass
-    elif fact == 1:
-        ruling +=10
-    elif fact == -1:
-        ruling -=10
+    elif fact < -5:
+        opinion += -10
+    elif fact > 5:
+        opinion += 10
             
-            
-    return ruling
+    return opinion
 
 
 #appending functinon, returns strings, contrary to the tally function
@@ -71,15 +70,16 @@ def winLoss (caucus, respondent, casepolicy, law, fact):#whereas members :the pa
     result = caucus.votingProcess (respondent, casepolicy, law, fact)
     tallyfavor = result[0]
     tallyagainst = result[1]
+    opinions = result[3]
     result = result[2]
     
     if result:
             
-        return [tallyfavor, tallyagainst, 'win']
+        return [tallyfavor, tallyagainst, 'win', opinions]
             
     else:
             
-        return [tallyfavor, tallyagainst, 'loss']
+        return [tallyfavor, tallyagainst, 'loss', opinions]
     
     
 #general calculation function to estimate the amount
@@ -87,29 +87,32 @@ def winLoss (caucus, respondent, casepolicy, law, fact):#whereas members :the pa
 #depending on the overall architecture, I may have to introduce it as well
 
 def amountCalc(instance, ask, counter): #ask and counter: dictionaries
+    
+    for i in instance.caucus:
         
+        print(i.opinion)
+       
     groups = caucus.Subcaucus.formulating(instance)
-    totalDist = groups[0].evaluation + groups[1].evaluation
-    amountDist = ask / totalDist
+    print(f'The losing pressure: {groups[0].evaluation}')
+    print(f'The winning pressure: {groups[1].evaluation}')
+    totalDist = groups[0].evaluation/10 + groups[1].evaluation/10
+    print(f'Total distribution is: {totalDist}')
+    amountDist = ask['non_material'] / totalDist
         
     #In theory, material losses and expenses are attributed so long as proven
     #unless questionable according to the respondent
     
-    amountDict = {
-        'material': None,
-        'non_material': None,
-        'ce': None
-    }
+    
+    amountDict = {}
         
     amountDict['material'] = ask['material'] - counter['material']
     amountDict['ce'] = ask['ce'] - counter['ce']
-    amountDict['non_material'] =  (groups[1].evaluation - groups[0].evaluation) * amountDist
+    amountDict['non_material'] =  (groups[1].evaluation/10 - groups[0].evaluation/10) * amountDist
         
     for key, value in amountDict.items():
         
         if value <= 0:
             
             value = 0
-    
-        
+            
     return amountDict
