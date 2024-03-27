@@ -95,11 +95,8 @@ class Caucus:
             
             opinion = rs.topdown(i, casepolicy, respondent) 
             
-            print(f'Opinion before assessing : {opinion}')
-            
             opinion = rs.bottomup (i, law, fact, opinion)
             
-            print(f'Opinion after assessing : {opinion}')
             
             if opinion > 0:        #the applicant bears the burden of proof. than amounts for the 0
                 i.vote = True
@@ -123,8 +120,6 @@ class Caucus:
             outcome = False
             
         opinions = dict(zip(self.caucus, opinions))
-        
-        print(opinions.values())
             
         return [tallyfavor, tallyagainst, outcome, opinions]
         
@@ -160,13 +155,11 @@ class Subcaucus(Caucus):
         
         grouping = []
         indicators = [False, True]
-        print(indicators[0])
         
         for i in indicators:  #notice how the indexes represent true and false
             
             interobj = Subcaucus(i, supers)
             grouping.append(interobj)
             
-            print (len(interobj.caucus))
             
         return tuple(grouping)

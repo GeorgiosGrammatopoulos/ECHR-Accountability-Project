@@ -379,8 +379,6 @@ def exportData(*args, connstring = None):
                 
                 dfcol = df.columns.tolist()
                 df2col = df2.columns.tolist()
-                print(dfcol)
-                print(df2col)
                 common = None
                 
                 for i in dfcol:

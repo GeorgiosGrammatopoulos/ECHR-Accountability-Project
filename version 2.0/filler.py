@@ -7,6 +7,7 @@ import judge
 import caucus
 import reasonings as rs
 import applicant
+from multiprocessing import Process, Pool, freeze_support
 
 
 states = [   #List of the CoE states
@@ -104,20 +105,20 @@ def generateJudge (pool = None, listing = None, index = None):
     else:
         
         judges = []
-        pool = exportData('Judges')
+        pool = odbc.exportData('Judges')
         
         for i in range(0, pool.shape[0]):
             myjudge = judge.Judge(
                 startterm = pool.loc[i, 'startterm'], 
-                countrynames = pool.loc[i, 'countrynames'], 
-                firstnames = pool.loc[i, 'firstnames'], 
-                lastnames = pool.loc[i, 'lastnames'], 
+                countrynames = pool.loc[i, 'countryname'], 
+                firstnames = pool.loc[i, 'firstname'], 
+                lastnames = pool.loc[i, 'lastname'], 
                 role = pool.loc[i, 'role'], 
                 section = pool.loc[i, 'section'], 
                 endterm = pool.loc[i, 'endterm'], 
                 opinion = pool.loc[i, 'opinion'],
                 )
-            judges.append[myjudge]
+            judges.append(myjudge)
         
         if index == None:
             indie = len(judges)        
@@ -130,79 +131,9 @@ def generateJudge (pool = None, listing = None, index = None):
         
         
 
-
-def generateCaucus (respondent, application_no = None, pool = None, listing = None, index = None):
-    
-    members = []
-    original = []
-    countries = []
-    
-    
-    while True:
-        
-        myjudge = generateJudge(pool = pool, listing = listing, index = index)
-
-        if myjudge.countryname in countries:
-            continue
-        if (myjudge.countryname != respondent) and (len(countries) == 6):
-            continue
-            
-        myjudge.judgeImport()
-        original.append(myjudge)
-        countries.append(myjudge.countryname)
-        
-        if len(countries) == 7:
-            
-            break
-            
-        
-    df = odbc.exportData('Judges')
-    
-    print(df.shape)
-        
-    for i in range(0, 7):
-        
-        name = df['lastname'].iloc[i]
-        members.append(name)
-        
-    instance = ','.join(members)
-    if application_no == None:
-        application_no = rd.randint(0,999999)
-    law = rd.randint(-10, 10)
-    fact = rd.randint (-10, 10)
-    application_date = ut.randomDate()
-    judgement_date = ut.randomDate()
-    
-    
-    mycaucus = caucus.Caucus(
-        application_no, 
-        application_date, 
-        respondent, 
-        instance, 
-        judgement_date,
-        law, 
-        fact
-        )
-            
-    for i in range (0, len(mycaucus.caucus)):
-        
-        mycaucus.caucus[i] = original[i]
-        
-    df = mycaucus.importCaucus()
-    
-    df = df.dropna(subset = ['lastname']).reset_index(drop = True)
-    
-    return [mycaucus, df]
-    
-
-
-
-def generateApplicant(application_no = None):
+def generateApplicant(application_no):
     
     listed = odbc.exportData('Applicants')
-    
-    if application_no == None:
-        application_no = listed.shape[0]
     
     firstname = ut.random_name()
     
@@ -276,7 +207,6 @@ def generateApplicant(application_no = None):
     count = 0
     for key,value in geo_dummies.items():
         if value == True:
-            print(f'{key}')
             nationality = f'{key}'
             break
         else:
@@ -316,109 +246,122 @@ def generateApplicant(application_no = None):
 
 
 
-def generateCase():
-    
-    elects = []
-    for i in range(0, 300):
-        elect = generateJudge()
-        elects.append(elect)
-        
-    listed = odbc.exportData('Cases')
-    application_no = listed.shape[0]
-    
-    countryname = rd.choice(states) 
-    
-    caucus = generateCaucus(countryname, application_no = application_no, listing = elects)
-    
-    judges = caucus[0]
-    judges = judges.caucus
-    
-    for i in judges:
-        print(i.policy)
-    
-    main = caucus[0]
-    
-
-    x = rd.choices(
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 
-        weights=[1000, 500, 300, 200, 100, 50, 250, 120, 6, 3], 
-        k=1)[0]
-    for i in range (0, x):
-        generateApplicant(application_no)
-        
-    df = odbc.exportData('Cases')
-    
-    return caucus
-    
-    
-    
 def generateReasoning():
 
-    instance = generateCase()
-    dfinstance = instance[1]
-    instance = instance[0]
-    parties = odbc.exportData('Applicants')
-    parties = parties.query(f'application_no == {instance.application_no}')
-    policies = []
-    law = rd.randint(-10, 10)
-    fact = rd.randint (-10, 10)
-    
-    for i in parties.columns.tolist():
-        
-         for k in range(0, parties.shape[0]):
-             
-             if parties.loc[k, i] == True:
-                 policies.append(i)
-    
-    first_result = rs.winLoss(instance, instance.countryname, policies, law, fact)
-    
-    contestl = False
-    if law > 5 or law < -5:
-        contestl = True
-        
-    resl = False
-    if (first_result[3] == 'win') and (contestl):
-        resl = True
-        
-    contestlf= False
-    if fact > 5 or fact < -5:
-        contestf = True
-        
-    resf= False
-    if first_result[3] == 'win':
-        resf = True
-    
-    print(f'Legal position: {law}')
-    print(f'Factual assessment: {fact}')
-    print(parties.head())
-    
+    initial = odbc.exportData('Applicants')
+    application_no = initial.shape[0]  #Applicatino submission: the number of the application is assigned before checking.
+    countryname = rd.choice(states) 
     dictAsk = {
         'material': rd.randint(1, 99999),
         'non_material': rd.randint(1, 99999),
         'ce': rd.randint(1, 9999)
     }
-        
     dictCounter = {
         'material': 0,
         'non_material': 0,
         'ce': 0
     }    
+
+
+    countriesrep = []     #Meanwhile, judges are elected and move on with their duties
+    elects = []
+    while True:
+        elect = generateJudge()
+        if elect.countryname in countriesrep:
+            continue
+        else:
+            elects.append(elect)
+            countriesrep.append(elect.countryname)
+        if len(countriesrep) == len(states):
+            break
+
+
+    members = []       #When the time comes to adjudicate, we assign six random judges and the national one
+    original = []
+    countries = []
+    lastnames = []
+    while True:
+        myjudge = generateJudge(pool = elects)
+        if myjudge.countryname in countries:
+            continue
+        if (myjudge.countryname != countryname) and (len(countries) == 6):
+            continue
+        myjudge.judgeImport()
+        original.append(myjudge)
+        countries.append(myjudge.countryname)
+        lastnames.append(myjudge.lastname)
+        if len(countries) == 7:
+            break
+            
+
+    instance = ','.join(lastnames)       #Additional instance information occur with the examination of a case
+    application_no = rd.randint(0,999999)
+    law = rd.randint(-10, 10)
+    fact = rd.randint (-10, 10)
+    application_date = ut.randomDate()
+    judgement_date = ut.randomDate()
+    law = rd.randint(-10, 10)
+    fact = rd.randint (-10, 10)
+    
+
+    mycaucus = caucus.Caucus(        #The caucus forms up to produce a ruling
+        application_no, 
+        application_date, 
+        countryname, 
+        instance, 
+        judgement_date,
+        law, 
+        fact
+        )
+
+
+    applicants= []    #In examining the case, the judges become familiar with all the facts, regardless relevance
+    policy = []
+    iterate = rd.randint(1,6)
+    for i in range(iterate):
+        myapplicant = generateApplicant(application_no)
+        applicants.append(myapplicant)
+        parties = myapplicant.vars()
+        policy.append(parties)
+
+
+    policies = []
+    for i in policy:          #Case policies become evident while examining the case
+        for quest, value in i:
+            if value and quest not in policies:
+                policies.append(quest)
+    
+
+    first_result = rs.winLoss(instance, instance.countryname, policies, law, fact)   #the judges determine indepdndently their vote
+    contestl = False
+    if law > 5 or law < -5:
+        contestl = True
+    resl = False
+    if (first_result[3] == 'win') and (contestl):
+        resl = True
+    contestlf= False
+    if fact > 5 or fact < -5:
+        contestf = True
+    resf= False
+    if first_result[3] == 'win':
+        resf = True
     
     
-    if first_result[2] == 'win':
+    if first_result[2] == 'win':      #if the applicant wins, compensation becomes relevant
+
         
-        for i in range(0, parties.shape[0]):
+        indexes = odbc.exportData('Applicants')
+        indexes = indexes.query(f'application_no == {application_no}').loc['application_no'].tolist()
+        print(indexes)
+
+        for i in indexes:
         
             amounts = rs.amountCalc(instance, dictAsk, dictCounter)
             
-            print(amounts.items())
             
             mdiff =  dictAsk['material'] - amounts['material']
-            print(mdiff)
             nmdiff = int(dictAsk['non_material'] - amounts['non_material'])
-            print(nmdiff)
             cediff = dictAsk['ce'] - amounts['ce']
-            print(cediff)
             
             odbc.importData('Reasonings',
                 application_no = instance.application_no,
@@ -442,16 +385,12 @@ def generateReasoning():
                 non_material_diff = nmdiff,
                 ce_diff = cediff,
                 )
-    
-    
-    else:
-        
-        for i in range(0, parties.shape[0]):
-            
+    else:   #in case of loss, there is no relevance in discussing compensation
+        for i in indexes:
             odbc.importData('Reasonings',
                 application_no = instance.application_no,
-                firstname = str(parties.loc[i, 'firstname']),
-                lastname = (parties.loc[i, 'lastname']),
+                firstname = applicants[i].firstname,
+                lastname = applicants[i].lastname,
                 contest_law = contestl,
                 contest_lawres = resl,
                 contest_fact = contestl,
@@ -473,111 +412,48 @@ def generateReasoning():
         
     df = odbc.exportData('Reasonings')
     df = df.query(f'application_no == {instance.application_no}')
-    print('\n\n\n\n', first_result[2], '\n\n\n\n')
     return df
+
+
+
+
             
+def call_generateReasoning(_):
+    # Helper function to call generateReasoning without arguments
+    generateReasoning()
 
 
 
 
+def main():
+
+    # Total number of times to run the function
+    total_runs = 1
+    # Optimal number of processes depends on your system and the nature of the task
+    num_processes = 4  # Example, adjust based on your system
+
+    with Pool(num_processes) as pool:
+        # Use pool.starmap or pool.map with a dummy iterable when the function takes no arguments
+        pool.map(call_generateReasoning, range(total_runs))
+
+    # After all processes have completed, export data
+    df = odbc.exportData('Reasonings')
+    print(df.head(20))
+    print(df.describe())
 
 
 
 
-
-    
-####################### WHITE BOX UNIT TESTS ###########################
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
-#Unit 1: Database connection, creation, import, export
+generateReasoning()
 
-#Code:
-#odbc.connectData()
-#odbc.createDatabase()
-#odbc.importData(
-#    'Judges', 
-#    firstname = ut.random_name(), 
-#    lastname = ut.random_name(), 
-#    role = 'Judge'
-#    )
-#df = odbc.exportData('Judges')
-#print(df.head(1))
-
-#Result: success
-
-#----------------------------------------------------------------------#
-
-#Unit 2: Judge random generation
-
-#Code
-#myjudge = generateJudge()
-#print(myjudge.firstname, myjudge.lastname, myjudge.startterm, sep = "\n")
-
-#Result: success
-
-#----------------------------------------------------------------------#
-
-#Unit 3: Parsing judge into database
-
-#Code
-#odbc.createDatabase()
-#myjudge = generateJudge()
-#myjudge.judgeImport()
-#df = odbc.exportData('Judges')
-#print(df.head(1))
-
-#Result: success
-
-#----------------------------------------------------------------------#
-
-#Unit 4: Building an effective caucus
-
-#Code:
-#odbc.createDatabase()
-#mycaucus = generateCaucus('Andorra')
-#print(mycaucus.head(10))
-
-#Result: success
-
-#----------------------------------------------------------------------#
-
-#Unit 5: Building an effective applicant
-#Code:
-#odbc.createDatabase()
-#for i in range(0, 100):
-#    generateApplicant()
 #df = odbc.exportData('Applicants')
+
 #print(df.head(100))
 
-#Result: success
-
-#----------------------------------------------------------------------#
-
-#Unit 6: Building an effective case
-#Code:
-#odbc.createDatabase()
-#df = generateCase()
-#print (df.head(1))
-#applicants = odbc.exportData('Applicants')
-#judges = odbc.exportData('Judges')
-#print(applicants.head(30))
-#print(judges.head(30))
-
-#Result: success
-
-#----------------------------------------------------------------------#
-
-
-#Unit 7: Building an effective reasoning
-
-#Code:
-odbc.createDatabase()
-df = generateReasoning()
-print(df.head(20))
-
-#Result: success
-
-#----------------------------------------------------------------------#
-
+#if __name__ == '__main__':
+#    freeze_support()  # For Windows compatibility
+#   main()

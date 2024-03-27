@@ -30,7 +30,7 @@ def topdown (judge, casepolicy, respondent):
                 priority -= 1
                 continue
                         
-            except ZeroDivisionError:
+            except:
                         
                 slope += k // priority - 1
                 priority -= 1
@@ -45,8 +45,7 @@ def topdown (judge, casepolicy, respondent):
                   
 def bottomup (judge, law, fact, opinion):
         
-    if law >= -5 and law <= 5:
-        print('passed')    #weight is designed under the assumption that the law is the most imperative outcome
+    if law >= -5 and law <= 5:   #weight is designed under the assumption that the law is the most imperative outcome
         pass
     elif law < -5:
         opinion -= 20
@@ -54,15 +53,13 @@ def bottomup (judge, law, fact, opinion):
         opinion += 20
             
             
-    if fact >= -5 and fact <= 5:
-        print('passed')    #weight is designed under the assumption that the law is the most imperative outcome
+    if fact >= -5 and fact <= 5:    #weight is designed under the assumption that the law is the most imperative outcome
         pass
     elif fact < -5:
         opinion -= 10
     elif fact > 5:
         opinion += 10
         
-    print (f'after the process, the opinion is {opinion}')
             
     return opinion
 
@@ -91,16 +88,9 @@ def winLoss (caucus, respondent, casepolicy, law, fact):#whereas members :the pa
 #depending on the overall architecture, I may have to introduce it as well
 
 def amountCalc(instance, ask, counter): #ask and counter: dictionaries
-    
-    for i in instance.caucus:
-        
-        print(i.opinion)
        
     groups = caucus.Subcaucus.formulating(instance)
-    print(f'The losing pressure: {groups[0].evaluation}')
-    print(f'The winning pressure: {groups[1].evaluation}')
     totalDist = (abs(groups[0].evaluation) + abs(groups[1].evaluation))
-    print(f'Total distribution is: {totalDist}')
 
     #In theory, material losses and expenses are attributed so long as proven
     #unless questionable according to the respondent
@@ -111,7 +101,6 @@ def amountCalc(instance, ask, counter): #ask and counter: dictionaries
     amountDict['material'] = ask['material'] - counter['material']
     amountDict['ce'] = ask['ce'] - counter['ce']
     amountDict['non_material'] =  ask['non_material'] - counter['non_material']
-    print(f'Non-adjusted ask is { amountDict["non_material"]}')
     amountDict['non_material'] = amountDict['non_material'] / totalDist * (groups[0].evaluation + groups[1].evaluation)
         
     for key, value in amountDict.items():
