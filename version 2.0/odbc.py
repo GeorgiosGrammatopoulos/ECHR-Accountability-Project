@@ -187,8 +187,7 @@ def createDatabase():
             'reference VARCHAR(100),'
             'footnote VARCHAR(100),'
             'link VARCHAR(100),'
-            'caucus VARCHAR(100),'
-            'judges VARCHAR(300))'
+            'caucus VARCHAR(100))'
             )
             
         check += 1

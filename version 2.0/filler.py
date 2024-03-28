@@ -62,9 +62,16 @@ states = [   #List of the CoE states
 #function generating one single judge
 #the pool parameter is essentially a question: do we have a pool of random judges
 #if so, we choose a judge from there; if not, we generate a new one
-def generateJudge (pool = None, listing = None, index = None):
+def generateJudge (countrynames = None, listing = None, index = None):
     
-    if pool == None:
+    if listing:        #In case I will need to simulate the behaviour of specific judges
+        if index:
+            return listing[index]
+        else:
+            return listing [rd.randint(0, len(listing))]
+        
+
+    else:
             
         policies = {} #Dictionary to be filled in the generation of a random judge
                 
@@ -80,7 +87,8 @@ def generateJudge (pool = None, listing = None, index = None):
                 continue
                 
         startterm = ut.randomDate()
-        countrynames = rd.choice(states)   #random state out of the candidates (see list at the beginning)
+        if countrynames == None:
+            countrynames = rd.choice(states)   #random state out of the candidates (see list at the beginning)
         firstnames = ut.random_name(8)  #random firstname, genderless. Take that into account
         lastnames = ut.random_name(8)  #random firstname, genderless. Take that into account
         role = 'Judge'   #since there are no weights yet on the impact of the president, all judges will be designated as such
@@ -92,40 +100,7 @@ def generateJudge (pool = None, listing = None, index = None):
             role = role, 
             policy = policies
             )
-    elif listing:
-        
-        if index:
-            
-            return listing[index]
-            
-        else:
-            
-            return listing [rd.randint(0, len(listing))]
-        
-    else:
-        
-        judges = []
-        pool = odbc.exportData('Judges')
-        
-        for i in range(0, pool.shape[0]):
-            myjudge = judge.Judge(
-                startterm = pool.loc[i, 'startterm'], 
-                countrynames = pool.loc[i, 'countryname'], 
-                firstnames = pool.loc[i, 'firstname'], 
-                lastnames = pool.loc[i, 'lastname'], 
-                role = pool.loc[i, 'role'], 
-                section = pool.loc[i, 'section'], 
-                endterm = pool.loc[i, 'endterm'], 
-                opinion = pool.loc[i, 'opinion'],
-                )
-            judges.append(myjudge)
-        
-        if index == None:
-            indie = len(judges)        
-            myjudge = judges[rd.randint(0, indie)]
-        else:
-            myjudge = judges[index]
-            
+         
             
     return myjudge
         
@@ -248,171 +223,165 @@ def generateApplicant(application_no):
 
 def generateReasoning():
 
-    initial = odbc.exportData('Applicants')
-    application_no = initial.shape[0]  #Applicatino submission: the number of the application is assigned before checking.
-    countryname = rd.choice(states) 
-    dictAsk = {
-        'material': rd.randint(1, 99999),
-        'non_material': rd.randint(1, 99999),
-        'ce': rd.randint(1, 9999)
-    }
-    dictCounter = {
-        'material': 0,
-        'non_material': 0,
-        'ce': 0
-    }    
-
-
-    countriesrep = []     #Meanwhile, judges are elected and move on with their duties
+    #Judges are elected and move on with their duties
     elects = []
-    while True:
-        elect = generateJudge()
-        if elect.countryname in countriesrep:
-            continue
-        else:
-            elects.append(elect)
-            countriesrep.append(elect.countryname)
-        if len(countriesrep) == len(states):
-            break
+    for i in states:
+        elect = generateJudge(i)
+        elects.append(elect)
+        elect.judgeImport()
 
 
-    members = []       #When the time comes to adjudicate, we assign six random judges and the national one
-    original = []
-    countries = []
-    lastnames = []
-    while True:
-        myjudge = generateJudge(pool = elects)
-        if myjudge.countryname in countries:
-            continue
-        if (myjudge.countryname != countryname) and (len(countries) == 6):
-            continue
-        myjudge.judgeImport()
-        original.append(myjudge)
-        countries.append(myjudge.countryname)
-        lastnames.append(myjudge.lastname)
-        if len(countries) == 7:
-            break
-            
+    #Then, judges get to constant work, for an extended period of time
+    for q in range(0, 5000):
+       
+       #When an application is submitted, it essentially contains an application no (secretariat), a respondent and a just satisfaction
+        #request
+        application_no = q
+        countryname = rd.choice(states) 
+        dictAsk = {
+            'material': rd.randint(1, 99999),
+            'non_material': rd.randint(1, 99999),
+            'ce': rd.randint(1, 9999)
+        }
+        dictCounter = {
+            'material': 0,
+            'non_material': 0,
+            'ce': 0
+        }    
 
-    instance = ','.join(lastnames)       #Additional instance information occur with the examination of a case
-    application_no = rd.randint(0,999999)
-    law = rd.randint(-10, 10)
-    fact = rd.randint (-10, 10)
-    application_date = ut.randomDate()
-    judgement_date = ut.randomDate()
-    law = rd.randint(-10, 10)
-    fact = rd.randint (-10, 10)
-    
+        original = []                #When the time comes to adjudicate, we assign six random judges and the national one
+        countriesrep = []
+        lastnames = [] 
+        judgeord = list(range(len(elects)))
+        rd.shuffle(judgeord)
+        for i in judgeord:
+            prosp = elects[i]
+            if prosp.countryname in countriesrep:
+                continue
+            if (prosp.countryname != countryname) and (len(countriesrep) == 6):
+                continue
+            original.append(prosp)
+            countriesrep.append(prosp.countryname)
+            lastnames.append(prosp.lastname)
+            if len(countriesrep) == 7:
+                break
+                
 
-    mycaucus = caucus.Caucus(        #The caucus forms up to produce a ruling
-        application_no, 
-        application_date, 
-        countryname, 
-        instance, 
-        judgement_date,
-        law, 
-        fact
-        )
-
-
-    applicants= []    #In examining the case, the judges become familiar with all the facts, regardless relevance
-    policy = []
-    iterate = rd.randint(1,6)
-    for i in range(iterate):
-        myapplicant = generateApplicant(application_no)
-        applicants.append(myapplicant)
-        parties = myapplicant.vars()
-        policy.append(parties)
+        #Additional instance information occur with the examination of a case
+        law = rd.randint(-10, 10)
+        fact = rd.randint (-10, 10)
+        application_date = ut.randomDate()
+        judgement_date = ut.randomDate()
 
 
-    policies = []
-    for i in policy:          #Case policies become evident while examining the case
-        for quest, value in i:
-            if value and quest not in policies:
-                policies.append(quest)
-    
+        mycaucus = caucus.Caucus(        #The caucus forms up to produce a ruling
+            application_no, 
+            application_date, 
+            countryname,
+            judgement_date, 
+            pool = original,
+            law = law, 
+            fact = fact
+            )
+        mycaucus.importCaucus()
 
-    first_result = rs.winLoss(instance, instance.countryname, policies, law, fact)   #the judges determine indepdndently their vote
-    contestl = False
-    if law > 5 or law < -5:
-        contestl = True
-    resl = False
-    if (first_result[3] == 'win') and (contestl):
-        resl = True
-    contestlf= False
-    if fact > 5 or fact < -5:
-        contestf = True
-    resf= False
-    if first_result[3] == 'win':
-        resf = True
-    
-    
-    if first_result[2] == 'win':      #if the applicant wins, compensation becomes relevant
+
+        applicants= []    #In examining the case, the judges become familiar with all the facts, regardless relevance
+        policy = []
+        iterate = rd.randint(1,6)
+        for i in range(iterate):
+            myapplicant = generateApplicant(application_no)
+            applicants.append(myapplicant)
+            parties = vars(myapplicant)
+            policy.append(parties)
+
+        policies = []
+        for i in policy:          #Case political impacts become evident while examining the case
+            for quest, value in i.items():
+                if value and quest not in policies:
+                    policies.append(quest)
+        mycaucus.casepolicy = policies
+        
+
+        first_result = rs.winLoss(mycaucus, mycaucus.countryname, law, fact)   #the judges determine indepdndently their vote
+        contestl = False
+        if law > 5 or law < -5:
+            contestl = True
+        resl = False
+        if (first_result[3] == 'win') and (contestl):
+            resl = True
+        contestlf= False
+        if fact > 5 or fact < -5:
+            contestf = True
+        resf= False
+        if first_result[3] == 'win':
+            resf = True
 
         
-        indexes = odbc.exportData('Applicants')
-        indexes = indexes.query(f'application_no == {application_no}').loc['application_no'].tolist()
-        print(indexes)
+        
+        if first_result[2] == 'win':      #if the applicant wins, compensation becomes relevant
 
-        for i in indexes:
-        
-            amounts = rs.amountCalc(instance, dictAsk, dictCounter)
+            for i in applicants:
             
+                amounts = rs.amountCalc(mycaucus, dictAsk, dictCounter)
+                
+                
+                mdiff =  dictAsk['material'] - amounts['material']
+                nmdiff = int(dictAsk['non_material'] - amounts['non_material'])
+                cediff = dictAsk['ce'] - amounts['ce']
+                
+                odbc.importData('Reasonings',
+                    application_no = mycaucus.application_no,
+                    firstname = i.firstname,
+                    lastname = i.lastname,
+                    contest_law = contestl,
+                    contest_lawres = resl,
+                    contest_fact = contestl,
+                    contest_factres = resf,
+                    statute = '99',
+                    favor = len(first_result[0]),
+                    against = len(first_result[1]),
+                    dissent_nj = False,
+                    material_ask = dictAsk['material'],
+                    non_material_ask = dictAsk['non_material'],
+                    ce_ask = dictAsk['ce'],
+                    material_award = amounts['material'],
+                    non_material_award = amounts['non_material'],
+                    ce_award = amounts['ce'],
+                    material_diff = mdiff,
+                    non_material_diff = nmdiff,
+                    ce_diff = cediff,
+                    )
+        else:   #in case of loss, there is no relevance in discussing compensation
+            for i in applicants:
+                odbc.importData('Reasonings',
+                    application_no = mycaucus.application_no,
+                    firstname = i.firstname,
+                    lastname = i.lastname,
+                    contest_law = contestl,
+                    contest_lawres = resl,
+                    contest_fact = contestl,
+                    contest_factres = resf,
+                    statute = '99',
+                    favor = len(first_result[0]),
+                    against = len(first_result[1]),
+                    dissent_nj = False,
+                    material_ask = dictAsk['material'],
+                    non_material_ask = dictAsk['non_material'],
+                    ce_ask = dictAsk['ce'],
+                    material_award = 0,
+                    non_material_award =  0,
+                    ce_award = 0,
+                    material_diff = 0,
+                    non_material_diff = 0,
+                    ce_diff = 0
+                    )
             
-            mdiff =  dictAsk['material'] - amounts['material']
-            nmdiff = int(dictAsk['non_material'] - amounts['non_material'])
-            cediff = dictAsk['ce'] - amounts['ce']
-            
-            odbc.importData('Reasonings',
-                application_no = instance.application_no,
-                firstname = parties.loc[i, 'firstname'],
-                lastname = parties.loc[i, 'lastname'],
-                contest_law = contestl,
-                contest_lawres = resl,
-                contest_fact = contestl,
-                contest_factres = resf,
-                statute = '99',
-                favor = len(first_result[0]),
-                against = len(first_result[1]),
-                dissent_nj = False,
-                material_ask = dictAsk['material'],
-                non_material_ask = dictAsk['non_material'],
-                ce_ask = dictAsk['ce'],
-                material_award = amounts['material'],
-                non_material_award = amounts['non_material'],
-                ce_award = amounts['ce'],
-                material_diff = mdiff,
-                non_material_diff = nmdiff,
-                ce_diff = cediff,
-                )
-    else:   #in case of loss, there is no relevance in discussing compensation
-        for i in indexes:
-            odbc.importData('Reasonings',
-                application_no = instance.application_no,
-                firstname = applicants[i].firstname,
-                lastname = applicants[i].lastname,
-                contest_law = contestl,
-                contest_lawres = resl,
-                contest_fact = contestl,
-                contest_factres = resf,
-                statute = '99',
-                favor = len(first_result[0]),
-                against = len(first_result[1]),
-                dissent_nj = False,
-                material_ask = dictAsk['material'],
-                non_material_ask = dictAsk['non_material'],
-                ce_ask = dictAsk['ce'],
-                material_award = 0,
-                non_material_award =  0,
-                ce_award = 0,
-                material_diff = 0,
-                non_material_diff = 0,
-                ce_diff = 0
-                )
-        
-    df = odbc.exportData('Reasonings')
-    df = df.query(f'application_no == {instance.application_no}')
-    return df
+        print(f'Completed: {q/50}%')
+
+    print('\n\n\nSample ready!\n\n\n')
+    return odbc.exportData('Reasonings')
+
 
 
 
@@ -448,7 +417,9 @@ def main():
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
-generateReasoning()
+odbc.createDatabase()
+df = generateReasoning()
+print(df.describe())
 
 #df = odbc.exportData('Applicants')
 

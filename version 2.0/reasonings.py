@@ -66,8 +66,11 @@ def bottomup (judge, law, fact, opinion):
 
 #appending functinon, returns strings, contrary to the tally function
 
-def winLoss (caucus, respondent, casepolicy, law, fact):#whereas members :the participant judges
+def winLoss (caucus, respondent, law, fact, casepolicy = None):#whereas members :the participant judges
     
+    if casepolicy == None:
+        casepolicy = caucus.casepolicy
+
     result = caucus.votingProcess (respondent, casepolicy, law, fact)
     tallyfavor = result[0]
     tallyagainst = result[1]

@@ -18,38 +18,40 @@ class Caucus:
         application_no, 
         application_date, 
         countryname, 
-        instance, 
         judgement_date,
+        pool = None, #mutually exclusive with instance. either you have judge objects, or judges' names
+        instance = None, 
         casepolicy = None, 
         law = None, 
         fact = None
         ):
         
-        session = odbc.exportData('Judges')
-        instances = instance.split(',')  #in input functions, the caucus will be a string of judge lastnames
-        members = []
         
-        for i in range(0, len(instances)):
-            #make sure it''s the right judge, in the right session
-            #it may become necessary to constrain terms for seizing
-            
-            lookup = str(instances[i])
-            querying= session.query(f"lastname == '{lookup}'").index 
-            member = judge.Judge(
-                startterm = str(session['startterm'].iloc[querying]), 
-                countrynames = str(session['countryname'].iloc[querying]), 
-                firstnames =  str(session['firstname'].iloc[querying]), 
-                lastnames = str(session['lastname'].iloc[querying]),
-                role = str(session['role'].iloc[querying]), 
-                section = str(session['section'].iloc[querying]), 
-                endterm = str(session['endterm'].iloc[querying])
-                )
-            members.append(member)
+        if instance:
+            session = odbc.exportData('Judges')
+            instances = instance.split(',')  #in input functions, the caucus will be a string of judge lastnames
+            pool = []
+            for i in range(0, len(instances)):
+                #make sure it''s the right judge, in the right session
+                #it may become necessary to constrain terms for seizing
+                
+                lookup = str(instances[i])
+                querying= session.query(f"lastname == '{lookup}'").index 
+                member = judge.Judge(
+                    startterm = str(session['startterm'].iloc[querying]), 
+                    countrynames = str(session['countryname'].iloc[querying]), 
+                    firstnames =  str(session['firstname'].iloc[querying]), 
+                    lastnames = str(session['lastname'].iloc[querying]),
+                    role = str(session['role'].iloc[querying]), 
+                    section = str(session['section'].iloc[querying]), 
+                    endterm = str(session['endterm'].iloc[querying])
+                    )
+                pool.append(member)
             
                  
         self.application_no = application_no
         self.application_date = application_date
-        self.caucus = members
+        self.caucus = pool
         self.casepolicy = casepolicy
         self.countryname = countryname
         self.law = law
