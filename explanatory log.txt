@@ -1,3 +1,28 @@
+Version B2024030306, 17-28 March 2024
+
+The past days have been dedicated to appling to PhD programs and finalizing the white box simulation. Well,, it has been finalized- as much as the data will not be needing cleaning
+
+Just by simulating, though, thw wokrings of the ECtHR, the following outcomes may be theorized:
+
+1. The amount of applicants well exceeds the amount of applications, meaning that measuring implications, according to the procedure of the ECtHR, well exceeds the number of cases.
+2. Perhaps relating to the random generation, the average amount awarded in material satisfaction significantly exceeds the average amount in non-material. The amounts I have been getting (average of 42976.57 of non-material against 49596.46 of material in the simulation) may be attributed to the opinion factor which reduces the amounts given. However, empirical observation indicates that the difference is proportionally much larger, which shows how some tests on that would be beneficial
+3. The hypothesis that the distribution of voting outcomes may be attributed to social dynamics seems now invalid to begin with. Apparently, the prevalence of law and fact seem to be compelling factors which influcence the voting preferences of judges, hence leading to 'sterner' outcomes (a preference for the 7-0s rather than the 4-3s). However, the real data will indicate whetehr this hypothesis needs to be revived
+4. Evem accounting for the bugs, the current model indicates a stronger preference for loss than win, emphasising on the impact of topdown assessments and the influence of the national judge. This simulation is stronger with handling controversial cases- in this example, controversy seems to be favoring the state. A test should control that.
+
+
+the previous outcomes (henceforth, codified as O1, O2, O3, O4 respectively) have already been integrated in the report system and will be ran daily.
+Additional orders of business:
+
+1. Fix the bug messing up the vote tally of the judges
+2. Repair and run the logistic and linear regression tests
+3. Create a universal check for the impact of the priority factor introduced in the model
+4. Create a test checking for the average difference between material and non-material satisfaction per bias factor
+5. Prepare a report on the social dynamics behind the interactions of various agents, to design an agent-based model (to be run with sufficiency of data)
+6. Prepare a check fof the preferencce of win/loss outcomes per case and judge. This control may indicate further implications for the way cases and individual prejudice impacts judicial outcomes
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 Version B2024030306 , 16 March 2024   
 
 
@@ -5,10 +30,10 @@ The log was right: I finished up with exports of judicial opinion into the relev
 
 I am coming to observe a serious lack in information on how the judges decide. I have already incorporated in the code the randomness in the judges who eventually participate (especially accounting for ad hoc judges and the ballot for case-by-case membership). I am not, however, unaware of the inconsistencies. they will be factored in the final product- but, for now, progress on the basic processes is paramount.
 
-------------------------------------------------------------------------------------------------------------------------------------------
-
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Version B2024030306 , 11 to 15 March 2024
+
 
 The latest focus has been arrangements of employment and seeking support for the proposal process. I guess actual work got deprioritized.
 
@@ -19,9 +44,10 @@ Having completed the import and export functionalities, I am now moving on to su
 
 I ended up concluding the database integration. Tomorrow I am working on adjusting the judicial reasoning into the whole structure, and codifying it into a dataframe. Cleaning operations may become necessary as well.
 
-------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Version B2024030306 , 8 to 10 March 2024
+
 
 Yesterday was Saturday, today is Sunday- but I guess science can't wait.
 
@@ -34,9 +60,10 @@ On Friday, I also managed to put together a provisional schematic of the neural 
 In other news, only the prototype version is operational at the moment. I guess tests will remain on hold until I build the second one.
 
 
-------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Version B2024030306, 6 March 2024:
+
 
 There has taken place a long hiatus, to finish drafting the research proposal
 It was valuable. I am now confident to say that my beta is not representative of the judicial process. I need to proceed with restructuring the whole thing, in the utility preference manner, startring from the simulatinoss.then, I will use the simulated datasets to redo my tests and hopefully get some results. Of course, minor refinement will be required, but at the moment i am too far away from the mark.
@@ -62,8 +89,10 @@ I am finding that, by making the fact of the national judge a primary considerat
 With that into account, the simulated judicial intuition appears rather balanced, except for the bias in favor of the state. Results appear in a wide range, and every iteration sequence is vastly different. But already, the results seem counter-intuitive: the assumption of total randomness is the favorable one. Still, that degree of "random" is simply impossible.
 
 
----------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 Version B20240118, 18 January 2024:
+
 
 Initial aggregations of the simulated dataset indicate similar patterns to those promised in legal theory: a normal distribution of voting patterns, with a significant, but not crucial preference for the state. The way the model is constructed, this preference may be attributed to the potential bias of the national judge towards their state of nationality.
 
