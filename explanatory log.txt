@@ -1,3 +1,159 @@
+Version B2024030306, 11 April 2024
+
+
+White Box simulation:
+Rollback without issues, all functionalities appear normal
+
+Black box tests:
+Nothing of importance in testing. Still conducting additional data exploration and literature review, to determine next points of action
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Version B2024030306, 10 April 2024
+
+
+White Box simulation:
+Rollback without issues, all functionalities appear normal
+
+Black box tests:
+Nothing of importance in testing. Additional data exploration is necessary.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Version B2024030306, 09 April 2024
+
+
+White Box simulation:
+I am coming to realize that the legal and the factual assessment are two different processes under strict legal methodology. Now that I have the necessary metrics, I will start adjusting the weights of the simulation, to kinda fit the court's real-life metrics. I am definitely starting with an adjustment of the lower end of the legal and factual assessment weights, as cases which are blatantly unfounded are discarded in the admissibility session
+
+Black box tests:
+Black box testing demonstrates still an exponential decrease of voting outcomes, irrespective of changes. Under the present model, the legal outcomes do not appear consequential. Until further informatioon becomes available, the changes will be scaled back and other directions pursued.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Version B2024030306, 08 April 2024
+
+
+White Box simulation:
+Nothing of interest. Experimented with various sample sizes, except for one bug all is normal.
+
+Black box tests:
+Today I did not run any of the standard reports, as I was sent, thankfully, back to the drawing board.
+
+After a conversation with my dear friend and experienced analyst, Alexandros Samaras, I resolved that I needed to revisit that assumption, with a view to the relation I originally observed.
+
+After a few unproductive hours, I came to understand an implication of the relevant judicial psychology theory, which is also (and unintentionally) reflected in the model: the concept of the negative vote. That was why the voting patterns did not make any sense: because I was mistakenly associating the negative vote with the lack of a positive vote. I switched my working metric to the favor-against vote differentials, and I found that its pattern follows a discrete exponential distribution. Splitting the datasets also made me realize that this overall trend also reflects a strong preference for the respondent. 
+
+Today was a good, big day.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Version B2024030306, 07 April 2024
+
+
+White Box simulation:
+Nothing of interest. Sampling works as planned. The topdown and bottom-up functions will be adjusted to serve as an adequate sample for the necessary black box amendments.
+
+Black box tests:
+In addition to the confusion matrices, I am now running a Poisson predictive model, to establish the vote tally. It still has a very limited predictive capacity, as do the rest of the tests.
+
+The problem I am dealing with is the lack of information. Of course, I could always simply pipe more information from the simulation into the black box- however, this would lead to potential overfitting. Plus, the tests need to be useful even without inside or intricate information. The lack has to do with the voting patterns.
+
+The only insight I have on the voting motivation of judges is their dissenting patterns: breaking anonymity and deciding to register one's opinion in public requires particular motivation, which is a bit different to the motivation of the original opinion. Before the ECtHR, the opinion process only includes nominal separate opinions. However, the judges usually declare their vote, along with their deviation or preference from the original caucus opinion. There are two chances:
+-A concurring opinion is one in which the judge determines that they concur with the majority, but have motivations to express their opinion nonetheless
+-A dissenting opinion is one in which the judge concurs with the minority, and still develops strong motivation to express their minds.
+
+As a reminder, 16,7% of the ECtHR rulings include separate opinions.
+
+Why judges express separate opinions is obvious: they concur with the majority, but have *substantial* differences from the majority. On the other hand, the reason why a judge would dissent has to do with a different factual or legal assessment- that is, motivation to reach a different conclusion. I will be introducing the new assessment tools in the basic simulatoin, and run tests on the correlation. What I should be getting, is the pure probability that someone diverges significantly, or disagrees on law and fact, given the probability of a national judge (around 14%). We see what we do with that information
+ 
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Version B2024030306, 02 April 2024
+
+
+White Box simulation:
+Tests O1, O2, O3, O4 proceeding as normal. I added a feature that prevents judges from examining a case when a violation is blatant (see ECHR jurisprudence). Also, I made slight changes to the code to generate a sample that includes dissent/separate opinion logic. I'll test it out tomorrow and see if it works.
+
+Black box tests:
+The integration of the blatant feature led to rather irregular results compared to the ones from last time: namely, a wider spread of compensation awards and some outlier instances, in which the court awarded a higher amount than the one asked. in the full dataset, the confusion matrices in legal and factual opinions were less accurate, but still achieved 82% accuracy; linear regression r-scores were also significantly reduced. However, on datasets that only accounted for favorable applicant outcomes, the accuracy was significantly higher. In datasets though which favored the respondent, the accuracy was significantly lower. the same difference was observed with datasets that had clear contests.
+
+As a reminder: we are still training the model in a simulation, based on the procedure of the ECtHR. However, a probable source of structural fallacies becomes visible, even in that ideal environment: when the law seems "blatantly" in favor or against the applicant, not reviewing the facts is prejudicial to the procedure, regardless of whether the tally is in favor or against the applicant. if it is in favor, it is possible that the lack of discourse on the facts allows for more "emotional" assessment, at least as far as the non-material just satisfaction component is concerned. When the law seems blatantly "against" the applicant, the lack of factual discourse allows for more strict interpretations- potentially, against the evolutive interpretation of human rights. I believe there is a lot to follow up with here. However, for the moment I am sticking with replication and optimization.
+
+in other news, tomorrow's simulation will have adjusted weights for omitting to examine the facts in blatant cases, and the tests will include a binomial logistic regression model on the dynamics of dissent against the total vote tally.
+
+Finally, I will be taking a productive break from the model, to work on PhD proposals. I will run the basic ones and log whatever deviations may occur.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Version B2024030306, 01 April 2024
+
+
+White Box simulation:
+Tests O1, O2, O3, O4 proceeding as normal. 
+
+Black box tests:
+The law and fact regression models present a relatively high accuracy, and the confusion matrices indicate a strong degree of predictability on vote outcomes.
+The initial concept (that of a logistic regression model, predicting win/loss) was much less accurate. I attribute the lack of accuracy to the binary nature of outcomes, which does not allow for much detail in the outcomes, and leads to more generic predictions. In any case, confusion matrices demonstrate an 75-85% accuracy (depending on the population features) in the assessment that voting patterns in normal circumstances tend to hit large majorities. Howeverm, additional testing is required to validate those outcomes.
+
+I will be constructing first an automatic report generator, then get on it.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Version B2024030306, 01 April 2024
+
+
+White Box simulation:
+Tests O1, O2, O3, O4 proceeding as normal.
+
+Black box tests:
+Black box testing suspended, to redraft initial tests. Tomorrow I will be probably done.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Version B2024030306, 31 March 2024
+
+
+White Box simulation:
+Tests O1, O2, O3, O4 proceeding as normal.
+
+Black box tests:
+Black box testing remains suspended, to redraft initial tests.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Version B2024030306, 30 March 2024
+
+
+White Box simulation:
+Tests O1, O2, O3, O4 proceeding as normal. The minor bug, a zero-division error, persists, but it is not impeding the process, so its priority becomes rather low.
+
+Black box tests:
+It seems like the initial model is insufficient. The new logic commences with the impact of unequivocal law and facts. Black box testing suspended, to redraft initial tests
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Version B2024030306, 29 March 2024
+
+
+White Box simulation:
+Tests O1, O2, O3, O4 proceeding as normal. There was a minor bug in the calculation of the judge's demeanor, but I made a small adjustment to the code, and that fixed it.
+
+Black box tests:
+Initial tests do not demonstrate anything of interest, other than information already known. I am starting with writing some tests on the importance of policy considerations. The models are a bit more complex than I expected - I think I may need a refresher of memory.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 Version B2024030306, 17-28 March 2024
 
 The past days have been dedicated to appling to PhD programs and finalizing the white box simulation. Well,, it has been finalized- as much as the data will not be needing cleaning
@@ -30,6 +186,7 @@ The log was right: I finished up with exports of judicial opinion into the relev
 
 I am coming to observe a serious lack in information on how the judges decide. I have already incorporated in the code the randomness in the judges who eventually participate (especially accounting for ad hoc judges and the ballot for case-by-case membership). I am not, however, unaware of the inconsistencies. they will be factored in the final product- but, for now, progress on the basic processes is paramount.
 
+
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Version B2024030306 , 11 to 15 March 2024
@@ -43,6 +200,7 @@ Between the 11th and the 14th, I restructured the database, in order to make it 
 Having completed the import and export functionalities, I am now moving on to supplementing  the judicial opinion simulation. This will require completing the subcaucus design, and creating a balancing function. I am not that concerned about the simulated cases; I have already completed an effective randomized simulation in the prototype version, which can help me generate sufficient data to build the prototype regression tests.
 
 I ended up concluding the database integration. Tomorrow I am working on adjusting the judicial reasoning into the whole structure, and codifying it into a dataframe. Cleaning operations may become necessary as well.
+
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -113,7 +271,3 @@ Additional references:
 Brems, E., & Lavrysen, L. (2013). Procedural Justice in Human Rights Adjudication: The European Court of Human Rights. Human Rights Quarterly, 35(1), 176–200. doi:10.1353/hrq.2013.0000
 
 Van de Heyning, C. J. (2012). The Natural “Home” of Fundamental Rights Adjudication: Constitutional Challenges to the European Court of Human Rights. Yearbook of European Law, 31(1), 128–161. doi:10.1093/yel/yes004
-
-
-
-------------------------------------------------------------------------------------------------------------------------------------------

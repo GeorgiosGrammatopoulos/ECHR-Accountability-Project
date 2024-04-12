@@ -1,3 +1,4 @@
+import odbc
 import tkinter as tk
 from tkinter import filedialog
 import pandas as pd
@@ -22,7 +23,7 @@ class myGUI:
 
     def run_tests(self):
         
-        Tests.mainTests()
+        print('Pending!')
         
     def create_database(self):
         

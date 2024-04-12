@@ -120,6 +120,7 @@ class Caucus:
         else:
             
             outcome = False
+
             
         opinions = dict(zip(self.caucus, opinions))
             

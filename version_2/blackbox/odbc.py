@@ -207,6 +207,8 @@ def createDatabase():
             'contest_lawres BIT,'
             'contest_fact BIT,'
             'contest_factres BIT,'
+            'dissent VARCHAR(100),'
+            'separate VARCHAR(100),'
             'statute VARCHAR(3),'
             'favor INT,'
             'against INT,'

@@ -1,7 +1,6 @@
 import random as rd
 import pandas as pd
 import utility as ut
-import datetime
 import odbc
 import judge
 import caucus
@@ -250,26 +249,25 @@ def generateReasoning():
         }    
 
         original = []                #When the time comes to adjudicate, we assign six random judges and the national one
-        countriesrep = []
-        lastnames = [] 
+        countries= []
         judgeord = list(range(len(elects)))
         rd.shuffle(judgeord)
         for i in judgeord:
             prosp = elects[i]
-            if prosp.countryname in countriesrep:
+            if prosp in original:
                 continue
-            if (prosp.countryname != countryname) and (len(countriesrep) == 6):
+            if (prosp.countryname != countryname) and (countryname not in countries) and (len(original) == 6):
                 continue
             original.append(prosp)
-            countriesrep.append(prosp.countryname)
-            lastnames.append(prosp.lastname)
-            if len(countriesrep) == 7:
+            countries.append(prosp.countryname)
+            if len(original) == 7:
                 break
-                
+
+        
 
         #Additional instance information occur with the examination of a case
-        law = rd.randint(-10, 10)
-        fact = rd.randint (-10, 10)
+        law = rd.randint(-7, 10)
+        fact = rd.randint (-7, 10)
         application_date = ut.randomDate()
         judgement_date = ut.randomDate()
 
@@ -308,14 +306,48 @@ def generateReasoning():
         if law > 5 or law < -5:
             contestl = True
         resl = False
-        if (first_result[3] == 'win') and (contestl):
+        if (law > 5) and (contestl == True):
             resl = True
-        contestlf= False
+        contestf= False
         if fact > 5 or fact < -5:
             contestf = True
         resf= False
-        if first_result[3] == 'win':
+        if (fact > 5) and (contestf == True):
             resf = True
+
+        #introducing the dynamics of the separate and the dissenting opinion:
+            
+        #if the judge maintains a strong negative on a matter, despite the positive opinions,
+        #it is very likely that they submit a dissenting opinion
+        
+
+        dissentl = []
+        dissentnum = 0
+        for key, value in first_result[3].items():
+            if first_result[2] == 'win' and value < -6:   #an opinion is formed that is positive on the correctness of their views
+                dissentl.append(key.lastname)
+                dissentnum += 1
+            elif first_result[2] == 'loss' and value > 8:
+                dissentl.append(key.lastname)
+                dissentnum += 1
+        dissentstr = ','.join(dissentl)
+
+        #If the judge is invested enough in a case to support their opinion despite the favorable outcome, they have stronger opinions
+        #on the case than their colleagues
+
+        separatel = []
+        separatenum = 0
+        totalop = list(first_result[3].values()) #total opinion of the caucus
+        totalop = sum(totalop)/7    #average opinion of the caucus
+        print(f'The caucus opined as: {totalop}')
+        for key, value in first_result[3].items():
+            if (first_result[2] == 'win' and value > 0) and (value >= totalop + 15 or value <= totalop - 15):    #if they still concur on the vote, but disagree significantly with the opinion
+                separatel.append(key.lastname)
+                separatenum += 1
+            elif (first_result[2] == 'loss' and value < 0) and (value >= totalop + 15 or value <= totalop - 15):
+                separatel.append(key.lastname)
+                separatenum += 1
+        separatestr = ','.join(separatel)
 
         
         
@@ -338,6 +370,8 @@ def generateReasoning():
                     contest_lawres = resl,
                     contest_fact = contestl,
                     contest_factres = resf,
+                    dissent = dissentstr,
+                    separate = separatestr,
                     statute = '99',
                     favor = len(first_result[0]),
                     against = len(first_result[1]),
@@ -362,6 +396,8 @@ def generateReasoning():
                     contest_lawres = resl,
                     contest_fact = contestl,
                     contest_factres = resf,
+                    dissent = dissentstr,
+                    separate = separatestr,
                     statute = '99',
                     favor = len(first_result[0]),
                     against = len(first_result[1]),
@@ -377,38 +413,11 @@ def generateReasoning():
                     ce_diff = 0
                     )
             
-        print(f'Completed: {q/50}%')
+        print(f'Completed: {q/50}%. Law score: {law}. Fact score: {fact}')
 
     print('\n\n\nSample ready!\n\n\n')
     return odbc.exportData('Reasonings')
 
-
-
-
-
-            
-def call_generateReasoning(_):
-    # Helper function to call generateReasoning without arguments
-    generateReasoning()
-
-
-
-
-def main():
-
-    # Total number of times to run the function
-    total_runs = 1
-    # Optimal number of processes depends on your system and the nature of the task
-    num_processes = 4  # Example, adjust based on your system
-
-    with Pool(num_processes) as pool:
-        # Use pool.starmap or pool.map with a dummy iterable when the function takes no arguments
-        pool.map(call_generateReasoning, range(total_runs))
-
-    # After all processes have completed, export data
-    df = odbc.exportData('Reasonings')
-    print(df.head(20))
-    print(df.describe())
 
 
 
@@ -419,7 +428,11 @@ pd.set_option('display.max_rows', None)
 
 odbc.createDatabase()
 df = generateReasoning()
+df = odbc.exportData('Reasonings')
 print(df.describe())
+count = df[df['dissent'].notna() | df['separate'].notna()].shape[0]
+percentage = count / df.shape[0] * 100
+print(f'The percentage of separate opinions is: {percentage}%')
 
 #df = odbc.exportData('Applicants')
 

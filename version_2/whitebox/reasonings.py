@@ -1,10 +1,4 @@
 #This is a white-box simulation of how judges decide. It will help build black-box regression models, and provide insight into their results
-import random
-import numpy as np
-import pandas as pd
-import utility as ut
-import odbc
-import judge
 import caucus
 
 #Function to store win/loss information in dataframes. The duality of outcomes can also be used to validate other data
@@ -30,7 +24,7 @@ def topdown (judge, casepolicy, respondent):
                 priority -= 1
                 continue
                         
-            except:
+            except ZeroDivisionError:
                         
                 slope += k // priority - 1
                 priority -= 1
@@ -44,6 +38,7 @@ def topdown (judge, casepolicy, respondent):
  #Assessing the facts is a group process. That will become relevant later on.
                   
 def bottomup (judge, law, fact, opinion):
+
         
     if law >= -5 and law <= 5:   #weight is designed under the assumption that the law is the most imperative outcome
         pass
@@ -51,22 +46,22 @@ def bottomup (judge, law, fact, opinion):
         opinion -= 20
     elif law > 5:
         opinion += 20
+
             
-            
-    if fact >= -5 and fact <= 5:    #weight is designed under the assumption that the law is the most imperative outcome
-        pass
-    elif fact < -5:
-        opinion -= 10
-    elif fact > 5:
-        opinion += 10
-        
+    if law >= -8 and law <= 8:
+        if fact >= -5 and fact <= 5:    #weight is designed under the assumption that the law is the most imperative outcome
+            pass
+        elif fact < -5:
+            opinion -= 10
+        elif fact > 5:
+            opinion += 10        
             
     return opinion
 
 
 #appending functinon, returns strings, contrary to the tally function
 
-def winLoss (caucus, respondent, law, fact, casepolicy = None):#whereas members :the participant judges
+def winLoss (caucus, respondent, law, fact, casepolicy = None):    #whereas members: the participant judges
     
     if casepolicy == None:
         casepolicy = caucus.casepolicy
